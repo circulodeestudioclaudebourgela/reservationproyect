@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 
 // Configuración del servidor de correo
-// Actualiza estas variables en tu .env
+// Actualiza esstas variables en tu .env
 const EMAIL_CONFIG = {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
