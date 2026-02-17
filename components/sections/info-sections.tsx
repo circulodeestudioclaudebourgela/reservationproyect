@@ -107,9 +107,63 @@ const testimonials = [
   },
 ]
 
+const sponsors = [
+  { name: 'Royal Canin', tier: 'gold' },
+  { name: 'Hill\'s Pet Nutrition', tier: 'gold' },
+  { name: 'Bayer Animal Health', tier: 'gold' },
+  { name: 'MSD Animal Health', tier: 'silver' },
+  { name: 'Purina Pro Plan', tier: 'silver' },
+  { name: 'Zoetis', tier: 'silver' },
+  { name: 'Agrovet Market', tier: 'bronze' },
+  { name: 'Vetoquinol', tier: 'bronze' },
+  { name: 'Dechra', tier: 'bronze' },
+  { name: 'IDEXX', tier: 'gold' },
+]
+
 export default function InfoSections() {
   return (
     <div className="space-y-0">
+      {/* Sponsors Marquee - Bridge section */}
+      <section className="relative -mt-20 pt-8 pb-12 bg-background">
+        <div className="container mx-auto px-4 mb-6">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Con el respaldo de
+          </p>
+        </div>
+        <div className="relative overflow-hidden">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
+          
+          <div className="animate-marquee flex items-center gap-12 md:gap-16 whitespace-nowrap w-max">
+            {/* Duplicate array for seamless loop */}
+            {[...sponsors, ...sponsors].map((sponsor, i) => (
+              <div
+                key={`${sponsor.name}-${i}`}
+                className={`flex items-center gap-3 px-6 py-3 rounded-lg border transition-colors ${
+                  sponsor.tier === 'gold'
+                    ? 'border-amber-200/60 bg-amber-50/50 text-amber-800'
+                    : sponsor.tier === 'silver'
+                    ? 'border-gray-200/60 bg-gray-50/50 text-gray-700'
+                    : 'border-gray-200/40 bg-gray-50/30 text-gray-600'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold ${
+                  sponsor.tier === 'gold'
+                    ? 'bg-amber-100 text-amber-700'
+                    : sponsor.tier === 'silver'
+                    ? 'bg-gray-100 text-gray-600'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {sponsor.name.charAt(0)}
+                </div>
+                <span className="text-sm font-medium">{sponsor.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
       <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
