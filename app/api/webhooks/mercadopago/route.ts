@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
 
           // Enviar email de confirmación
           try {
+            console.log('[Webhook MP] Preparing confirmation email for:', attendee.email)
+            
             const emailHtml = generatePaymentConfirmationEmail({
               fullName: attendee.full_name,
               email: attendee.email,
@@ -106,12 +108,23 @@ export async function POST(request: NextRequest) {
             )
 
             if (emailResult.success) {
-              console.log('[Webhook MP] ✓ Confirmation email sent to:', attendee.email)
+              console.log('[Webhook MP] ✓ Confirmation email sent successfully:', {
+                email: attendee.email,
+                ticket: attendee.ticket_code,
+              })
             } else {
-              console.error('[Webhook MP] ✗ Email send failed:', emailResult.error)
+              console.error('[Webhook MP] ✗ Email send failed:', {
+                email: attendee.email,
+                error: emailResult.error,
+                ticket: attendee.ticket_code,
+              })
             }
           } catch (emailError) {
-            console.error('[Webhook MP] Email error:', emailError)
+            console.error('[Webhook MP] Email exception:', {
+              email: attendee.email,
+              error: emailError instanceof Error ? emailError.message : String(emailError),
+              stack: emailError instanceof Error ? emailError.stack : undefined,
+            })
             // No fallar el webhook por error de email
           }
         }
@@ -131,6 +144,8 @@ export async function POST(request: NextRequest) {
       // Enviar email de pago rechazado (solo si no está pagado)
       if (attendee.status !== 'paid') {
         try {
+          console.log('[Webhook MP] Preparing rejection email for:', attendee.email)
+          
           const errorReasons: Record<string, string> = {
             cc_rejected_insufficient_amount: 'Fondos insuficientes en tu tarjeta',
             cc_rejected_call_for_authorize: 'Tu banco requiere autorización del pago',
@@ -163,12 +178,24 @@ export async function POST(request: NextRequest) {
           )
 
           if (emailResult.success) {
-            console.log('[Webhook MP] ✓ Rejection email sent to:', attendee.email)
+            console.log('[Webhook MP] ✓ Rejection email sent successfully:', {
+              email: attendee.email,
+              reason,
+              statusDetail: paymentResult.statusDetail,
+            })
           } else {
-            console.error('[Webhook MP] ✗ Rejection email failed:', emailResult.error)
+            console.error('[Webhook MP] ✗ Rejection email failed:', {
+              email: attendee.email,
+              error: emailResult.error,
+              reason,
+            })
           }
         } catch (emailError) {
-          console.error('[Webhook MP] Rejection email error:', emailError)
+          console.error('[Webhook MP] Rejection email exception:', {
+            email: attendee.email,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+            stack: emailError instanceof Error ? emailError.stack : undefined,
+          })
         }
       }
     }

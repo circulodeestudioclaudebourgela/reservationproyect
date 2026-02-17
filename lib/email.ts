@@ -10,6 +10,10 @@ const EMAIL_CONFIG = {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
   },
+  // Timeouts para evitar que se quede colgado
+  connectionTimeout: 15000, // 15 segundos para conectar
+  greetingTimeout: 10000,   // 10 segundos para greeting
+  socketTimeout: 30000,     // 30 segundos para operaciones
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'circulodeestudiosclaudebourgela@gmail.com'
@@ -606,17 +610,30 @@ export async function sendEmail(
   htmlContent: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await transporter.sendMail({
+    console.log(`[Email] Attempting to send to ${to}...`)
+    
+    const info = await transporter.sendMail({
       from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to,
       subject,
       html: htmlContent,
     })
     
-    console.log(`[Email] Sent to ${to}: ${subject}`)
+    console.log(`[Email] ✓ Successfully sent to ${to}:`, {
+      subject,
+      messageId: info.messageId,
+      response: info.response,
+    })
+    
     return { success: true }
   } catch (error) {
-    console.error('[Email] Failed to send:', error)
+    console.error('[Email] ✗ Failed to send:', {
+      to,
+      subject,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Error al enviar el correo' 

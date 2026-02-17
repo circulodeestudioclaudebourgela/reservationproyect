@@ -214,6 +214,8 @@ export async function verifyPaymentStatus(paymentId: string): Promise<{
 
 async function sendConfirmationEmail(attendee: Attendee, amount: number, paymentMethod: string) {
   try {
+    console.log('[Payment] Preparing confirmation email for:', attendee.email)
+    
     const emailHtml = generatePaymentConfirmationEmail({
       fullName: attendee.full_name,
       email: attendee.email,
@@ -232,18 +234,28 @@ async function sendConfirmationEmail(attendee: Attendee, amount: number, payment
     )
 
     if (result.success) {
-      console.log('[Payment] Confirmation email sent to:', attendee.email)
+      console.log('[Payment] ✓ Confirmation email sent successfully:', attendee.email)
     } else {
-      console.error('[Payment] Email send failed:',result.error)
+      console.error('[Payment] ✗ Email send failed:', {
+        email: attendee.email,
+        error: result.error,
+        ticket: attendee.ticket_code,
+      })
     }
   } catch (error) {
-    console.error('[Payment] sendConfirmationEmail error:', error)
-    throw error
+    // NO lanzar error - el pago ya está confirmado, el email es secundario
+    console.error('[Payment] sendConfirmationEmail exception:', {
+      email: attendee.email,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
   }
 }
 
 async function sendPaymentRejectionEmail(attendee: Attendee, amount: number, reason: string) {
   try {
+    console.log('[Payment] Preparing rejection email for:', attendee.email)
+    
     const emailHtml = generatePaymentRejectedEmail(
       {
         fullName: attendee.full_name,
@@ -265,13 +277,21 @@ async function sendPaymentRejectionEmail(attendee: Attendee, amount: number, rea
     )
 
     if (result.success) {
-      console.log('[Payment] Rejection email sent to:', attendee.email)
+      console.log('[Payment] ✓ Rejection email sent successfully:', attendee.email)
     } else {
-      console.error('[Payment] Rejection email send failed:', result.error)
+      console.error('[Payment] ✗ Rejection email send failed:', {
+        email: attendee.email,
+        error: result.error,
+        reason,
+      })
     }
   } catch (error) {
-    console.error('[Payment] sendPaymentRejectionEmail error:', error)
-    throw error
+    // NO lanzar error - no queremos bloquear el flujo por un email fallido
+    console.error('[Payment] sendPaymentRejectionEmail exception:', {
+      email: attendee.email,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
   }
 }
 
