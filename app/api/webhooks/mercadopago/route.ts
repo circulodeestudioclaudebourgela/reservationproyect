@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPaymentStatus } from '@/lib/mercadopago'
 import { supabase } from '@/lib/supabase'
-import { sendEmail, generatePaymentConfirmationEmail } from '@/lib/email'
+import { sendEmail, generatePaymentConfirmationEmail, generatePaymentRejectedEmail } from '@/lib/email'
 import crypto from 'crypto'
 
 // ============================================
@@ -57,62 +57,130 @@ export async function POST(request: NextRequest) {
       statusDetail: paymentResult.statusDetail,
     })
 
+    // Buscar el attendee por payment_order_id que contenga este paymentId
+    const { data: attendees } = await supabase
+      .from('attendees')
+      .select()
+      .or(`payment_order_id.like.%${paymentId}%`)
+
+    if (!attendees || attendees.length === 0) {
+      console.log('[Webhook MP] No attendee found for payment:', paymentId)
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
+
+    const attendee = attendees[0]
+    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+
+    // Manejar pago aprobado
     if (paymentResult.status === 'approved') {
-      // Buscar el attendee por payment_order_id que contenga este paymentId
-      const { data: attendees } = await supabase
-        .from('attendees')
-        .select()
-        .or(`payment_order_id.like.%${paymentId}%`)
+      // Solo actualizar si aún no está pagado
+      if (attendee.status !== 'paid') {
+        const { error: updateError } = await supabase
+          .from('attendees')
+          .update({ status: 'paid' })
+          .eq('id', attendee.id)
 
-      if (attendees && attendees.length > 0) {
-        const attendee = attendees[0]
-
-        // Solo actualizar si aún no está pagado
-        if (attendee.status !== 'paid') {
-          const { error: updateError } = await supabase
-            .from('attendees')
-            .update({ status: 'paid' })
-            .eq('id', attendee.id)
-
-          if (updateError) {
-            console.error('[Webhook MP] DB update error:', updateError)
-          } else {
-            console.log('[Webhook MP] Attendee marked as paid:', attendee.id)
-
-            // Enviar email de confirmación
-            try {
-              const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
-              const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
-
-              const emailHtml = generatePaymentConfirmationEmail({
-                fullName: attendee.full_name,
-                email: attendee.email,
-                dni: attendee.dni,
-                phone: attendee.phone,
-                role: attendee.role,
-                organization: attendee.organization || undefined,
-                ticketCode: attendee.ticket_code,
-                amount,
-              })
-
-              await sendEmail(
-                attendee.email,
-                '✅ ¡Tu registro al II Simposio Veterinario está confirmado!',
-                emailHtml
-              )
-
-              console.log('[Webhook MP] Confirmation email sent to:', attendee.email)
-            } catch (emailError) {
-              console.error('[Webhook MP] Email error:', emailError)
-              // No fallar el webhook por error de email
-            }
-          }
+        if (updateError) {
+          console.error('[Webhook MP] DB update error:', updateError)
         } else {
-          console.log('[Webhook MP] Attendee already paid:', attendee.id)
+          console.log('[Webhook MP] ✓ Attendee marked as paid:', attendee.id)
+
+          // Enviar email de confirmación
+          try {
+            const emailHtml = generatePaymentConfirmationEmail({
+              fullName: attendee.full_name,
+              email: attendee.email,
+              dni: attendee.dni,
+              phone: attendee.phone,
+              role: attendee.role,
+              organization: attendee.organization || undefined,
+              ticketCode: attendee.ticket_code,
+              amount,
+            })
+
+            const emailResult = await sendEmail(
+              attendee.email,
+              '✓ Tu registro al II Simposio Veterinario está confirmado',
+              emailHtml
+            )
+
+            if (emailResult.success) {
+              console.log('[Webhook MP] ✓ Confirmation email sent to:', attendee.email)
+            } else {
+              console.error('[Webhook MP] ✗ Email send failed:', emailResult.error)
+            }
+          } catch (emailError) {
+            console.error('[Webhook MP] Email error:', emailError)
+            // No fallar el webhook por error de email
+          }
         }
       } else {
-        console.log('[Webhook MP] No attendee found for payment:', paymentId)
+        console.log('[Webhook MP] → Attendee already paid, skipping:', attendee.id)
       }
+    }
+    
+    // Manejar pago rechazado
+    else if (paymentResult.status === 'rejected' || paymentResult.status === 'cancelled') {
+      console.log('[Webhook MP] ✗ Payment rejected/cancelled:', {
+        paymentId,
+        status: paymentResult.status,
+        statusDetail: paymentResult.statusDetail,
+      })
+
+      // Enviar email de pago rechazado (solo si no está pagado)
+      if (attendee.status !== 'paid') {
+        try {
+          const errorReasons: Record<string, string> = {
+            cc_rejected_insufficient_amount: 'Fondos insuficientes en tu tarjeta',
+            cc_rejected_call_for_authorize: 'Tu banco requiere autorización del pago',
+            cc_rejected_bad_filled_security_code: 'Código de seguridad incorrecto',
+            cc_rejected_other_reason: 'Tu pago fue rechazado por el banco',
+            cc_rejected_duplicated_payment: 'Ya existe un pago duplicado',
+          }
+
+          const reason = errorReasons[paymentResult.statusDetail || ''] || 
+                        'No se pudo procesar tu pago. Intenta con otro método.'
+
+          const emailHtml = generatePaymentRejectedEmail(
+            {
+              fullName: attendee.full_name,
+              email: attendee.email,
+              dni: attendee.dni,
+              phone: attendee.phone,
+              role: attendee.role,
+              organization: attendee.organization || undefined,
+              ticketCode: attendee.ticket_code,
+              amount,
+            },
+            reason
+          )
+
+          const emailResult = await sendEmail(
+            attendee.email,
+            'Problema con tu pago - II Simposio Veterinario',
+            emailHtml
+          )
+
+          if (emailResult.success) {
+            console.log('[Webhook MP] ✓ Rejection email sent to:', attendee.email)
+          } else {
+            console.error('[Webhook MP] ✗ Rejection email failed:', emailResult.error)
+          }
+        } catch (emailError) {
+          console.error('[Webhook MP] Rejection email error:', emailError)
+        }
+      }
+    }
+    
+    // Manejar pago pendiente
+    else if (paymentResult.status === 'pending' || paymentResult.status === 'in_process') {
+      console.log('[Webhook MP] ⏳ Payment pending:', {
+        paymentId,
+        statusDetail: paymentResult.statusDetail,
+      })
+      // No enviar email para pagos pendientes por webhook
+      // Ya se envió desde el frontend si corresponde
     }
 
     // Siempre responder 200 para evitar reintentos
