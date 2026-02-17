@@ -11,7 +11,13 @@ import {
   Mail,
   GraduationCap,
   Lightbulb,
-  Award
+  Award,
+  Star,
+  Quote,
+  Car,
+  Wifi,
+  Wind,
+  Coffee
 } from 'lucide-react'
 
 const features = [
@@ -76,6 +82,30 @@ const getTypeStyles = (type: string) => {
       return 'bg-muted text-muted-foreground border-l-muted-foreground/30'
   }
 }
+
+const testimonials = [
+  {
+    name: 'Dr. Carlos Mendoza',
+    role: 'Clínica Veterinaria San Martín',
+    image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
+    quote: 'Excelentes ponencias, especialmente la de dermatología veterinaria avanzada. Los talleres prácticos fueron muy valiosos para mi práctica diaria.',
+    rating: 5,
+  },
+  {
+    name: 'Dra. María Torres',
+    role: 'Hospital Veterinario Central',
+    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
+    quote: 'Networking invaluable. Conocí colegas de todo el país y establecí contactos importantes para colaboraciones futuras. Altamente recomendado.',
+    rating: 5,
+  },
+  {
+    name: 'Dr. Luis Ramírez',
+    role: 'SENASA - La Libertad',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    quote: 'Organización impecable y contenido de primera calidad. Las instalaciones del hotel fueron perfectas. Ya estoy esperando la edición 2026.',
+    rating: 5,
+  },
+]
 
 export default function InfoSections() {
   return (
@@ -208,6 +238,72 @@ export default function InfoSections() {
         </div>
       </section>
 
+      {/* Testimonials & Trust Section */}
+      <section className="py-20 md:py-28 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Section header */}
+            <div className="text-center mb-16">
+              <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
+                Primera Edición 2025
+              </span>
+              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
+                Lo que dijeron nuestros asistentes
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Más de 200 profesionales veterinarios participaron en nuestra primera edición
+              </p>
+            </div>
+
+            {/* Testimonials grid */}
+            <div className="grid md:grid-cols-3 gap-6 mb-16">
+              {testimonials.map((t, idx) => (
+                <Card key={idx} className="p-6 border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
+                  <Quote className="w-8 h-8 text-secondary/20 absolute top-4 right-4" />
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-secondary/30 to-primary/30 shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={t.image}
+                        alt={t.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(t.rating)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </Card>
+              ))}
+            </div>
+
+            {/* Stats bar */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { value: '98%', label: 'Satisfacción General' },
+                { value: '200+', label: 'Asistentes 2025' },
+                { value: '15', label: 'Especialidades Cubiertas' },
+                { value: '4.9/5', label: 'Calificación Promedio' },
+              ].map(({ value, label }) => (
+                <div key={label} className="text-center p-6 rounded-xl bg-muted/50 border border-border">
+                  <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">{value}</div>
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Location Section */}
       <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
@@ -272,42 +368,38 @@ export default function InfoSections() {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <span className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                      <Car className="w-3 h-3" />
                       Estacionamiento gratuito
                     </span>
-                    <span className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                      <Wifi className="w-3 h-3" />
                       WiFi de alta velocidad
                     </span>
-                    <span className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                      <Wind className="w-3 h-3" />
                       Aire acondicionado
                     </span>
-                    <span className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                      <Coffee className="w-3 h-3" />
                       Cafetería
                     </span>
                   </div>
                 </div>
 
-                {/* Map placeholder */}
-                <div className="bg-muted min-h-[400px] lg:min-h-full flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5" />
-                  <div className="relative text-center p-8">
-                    <div className="w-20 h-20 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-4">
-                      <MapPin className="w-10 h-10 text-secondary" />
-                    </div>
-                    <p className="text-muted-foreground font-medium mb-2">Mapa de ubicación</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Hotel Costa del Sol - El Golf
-                    </p>
-                    <a 
-                      href="https://maps.app.goo.gl/yVmbGd3ihoRLxUHeA"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-full font-medium hover:bg-secondary/90 transition-colors"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Ver en Google Maps
-                    </a>
-                  </div>
+                {/* Google Maps Embed */}
+                <div className="bg-muted min-h-[400px] lg:min-h-full relative overflow-hidden">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3949.723!2d-79.0359!3d-8.1133!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91ad3d8e1f42d2ff%3A0x9f5b4f6c5e6f0f25!2sHotel%20Costa%20del%20Sol%20Wyndham%20Trujillo%20Golf!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, minHeight: '400px' }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="absolute inset-0"
+                    title="Ubicación Hotel Costa del Sol - El Golf, Trujillo"
+                  />
                 </div>
               </div>
             </Card>

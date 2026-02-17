@@ -1,9 +1,39 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, Users } from 'lucide-react'
+import { Calendar, MapPin, Clock } from 'lucide-react'
+
+// Hook para countdown
+function useCountdown(targetDate: Date) {
+  const calculateTimeLeft = () => {
+    const difference = targetDate.getTime() - new Date().getTime()
+    if (difference <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 }
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+      total: difference,
+    }
+  }
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft())
+
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return timeLeft
+}
 
 export default function HeroSection() {
+  const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+  const EVENT_DATE = new Date('2026-06-05T08:00:00')
+  const countdown = useCountdown(EVENT_DATE)
+  const earlyBird = useCountdown(EARLY_BIRD_DEADLINE)
+  const isEarlyBird = earlyBird.total > 0
   const scrollToForm = () => {
     const formElement = document.getElementById('registration-form')
     formElement?.scrollIntoView({ behavior: 'smooth' })
@@ -16,6 +46,17 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-primary via-primary to-primary/95 text-primary-foreground flex items-center overflow-hidden">
+      {/* Background image - conference/event */}
+      <div className="absolute inset-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-15"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-primary/80" />
+      </div>
+
       {/* Abstract background pattern */}
       <div className="absolute inset-0">
         {/* Animated gradient orbs */}
@@ -53,6 +94,35 @@ export default function HeroSection() {
           <p className="text-xl md:text-2xl mb-6 text-primary-foreground/80 font-light max-w-2xl mx-auto">
             El evento veterinario del año
           </p>
+
+          {/* Early Bird Countdown */}
+          {isEarlyBird && (
+            <div className="mb-8 inline-block">
+              <div className="bg-amber-500/20 border border-amber-400/30 backdrop-blur-sm rounded-xl px-6 py-4">
+                <div className="flex items-center gap-2 mb-3 justify-center">
+                  <Clock className="w-4 h-4 text-amber-300" />
+                  <p className="text-sm font-medium text-amber-200">Precio Early Bird termina en:</p>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { value: earlyBird.days, label: 'Días' },
+                    { value: earlyBird.hours, label: 'Horas' },
+                    { value: earlyBird.minutes, label: 'Min' },
+                    { value: earlyBird.seconds, label: 'Seg' },
+                  ].map(({ value, label }) => (
+                    <div key={label} className="text-center">
+                      <div className="bg-white/10 rounded-lg px-2 py-1 min-w-[48px]">
+                        <div className="text-xl md:text-2xl font-bold text-white font-mono tabular-nums">
+                          {String(value).padStart(2, '0')}
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-white/60 mt-1">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Event details pills */}
           <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
@@ -98,6 +168,26 @@ export default function HeroSection() {
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">10+</div>
               <p className="text-sm md:text-base text-primary-foreground/70">Talleres Prácticos</p>
+            </div>
+          </div>
+
+          {/* Event countdown */}
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <p className="text-sm text-white/60 mb-3">El evento comienza en:</p>
+            <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto">
+              {[
+                { value: countdown.days, label: 'Días' },
+                { value: countdown.hours, label: 'Horas' },
+                { value: countdown.minutes, label: 'Minutos' },
+                { value: countdown.seconds, label: 'Segundos' },
+              ].map(({ value, label }) => (
+                <div key={label} className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
+                  <div className="text-2xl md:text-3xl font-bold text-white font-mono tabular-nums">
+                    {String(value).padStart(2, '0')}
+                  </div>
+                  <div className="text-[10px] md:text-xs text-white/60">{label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
