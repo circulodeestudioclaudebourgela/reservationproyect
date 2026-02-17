@@ -22,7 +22,8 @@ import {
   AlertCircle,
   ChevronLeft,
   Info,
-  Lock
+  Lock,
+  Phone
 } from 'lucide-react'
 import type { RegistrationForm } from '@/lib/validations'
 import { registerAttendee } from '@/app/actions/register'
