@@ -45,10 +45,11 @@ export async function processYapePayment(
         const attendee = attendeeData as Attendee
         const errorMsg = getPaymentErrorMessage(result.statusDetail || result.error || '')
         
-        // Enviar email de pago rechazado (no bloquear)
-        sendPaymentRejectionEmail(attendee, amount, errorMsg).catch(err => {
-          console.error('[Payment] Yape rejection email error:', err)
-        })
+        // Enviar email de pago rechazado con timeout de 10s
+        await sendEmailWithTimeout(
+          () => sendPaymentRejectionEmail(attendee, amount, errorMsg),
+          10000
+        )
       }
       
       return {
@@ -77,10 +78,11 @@ export async function processYapePayment(
 
     const attendee = data as Attendee
 
-    // Enviar email de confirmación (async, no bloquear el flujo)
-    sendConfirmationEmail(attendee, amount, 'yape').catch(err => {
-      console.error('[Payment] Yape confirmation email error:', err)
-    })
+    // Enviar email de confirmación con timeout de 10s
+    await sendEmailWithTimeout(
+      () => sendConfirmationEmail(attendee, amount, 'yape'),
+      10000
+    )
 
     console.log('[Payment] Yape payment successful - Ticket:', attendee.ticket_code)
 
@@ -134,10 +136,11 @@ export async function processCardPayment(
         const attendee = attendeeData as Attendee
         const errorMsg = getPaymentErrorMessage(result.statusDetail || result.error || '')
         
-        // Enviar email de pago rechazado (no bloquear)
-        sendPaymentRejectionEmail(attendee, amount, errorMsg).catch(err => {
-          console.error('[Payment] Card rejection email error:', err)
-        })
+        // Enviar email de pago rechazado con timeout de 10s
+        await sendEmailWithTimeout(
+          () => sendPaymentRejectionEmail(attendee, amount, errorMsg),
+          10000
+        )
       }
       
       return {
@@ -166,10 +169,11 @@ export async function processCardPayment(
 
     const attendee = data as Attendee
 
-    // Enviar email de confirmación (async, no bloquear el flujo)
-    sendConfirmationEmail(attendee, amount, 'tarjeta').catch(err => {
-      console.error('[Payment] Card confirmation email error:', err)
-    })
+    // Enviar email de confirmación con timeout de 10s
+    await sendEmailWithTimeout(
+      () => sendConfirmationEmail(attendee, amount, 'tarjeta'),
+      10000
+    )
 
     console.log('[Payment] Card payment successful - Ticket:', attendee.ticket_code)
 
@@ -211,6 +215,26 @@ export async function verifyPaymentStatus(paymentId: string): Promise<{
 // ============================================
 // Funciones auxiliares de email
 // ============================================
+
+// Helper para esperar email con timeout
+async function sendEmailWithTimeout<T>(
+  emailFn: () => Promise<T>,
+  timeoutMs: number = 10000
+): Promise<T | null> {
+  try {
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => {
+        console.log('[Email] Timeout reached, continuing without waiting')
+        resolve(null)
+      }, timeoutMs)
+    })
+
+    return await Promise.race([emailFn(), timeoutPromise])
+  } catch (error) {
+    console.error('[Email] sendEmailWithTimeout error:', error)
+    return null
+  }
+}
 
 async function sendConfirmationEmail(attendee: Attendee, amount: number, paymentMethod: string) {
   try {
