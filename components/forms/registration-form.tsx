@@ -283,7 +283,7 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   Al continuar, aceptas nuestros términos y condiciones.
                   <br />
-                  Pago seguro procesado por <span className="font-semibold">Culqi</span>.
+                  Pago seguro procesado por <span className="font-semibold">MercadoPago</span>.
                 </p>
               </div>
             </form>

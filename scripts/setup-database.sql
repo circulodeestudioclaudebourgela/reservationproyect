@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS attendees (
   role TEXT NOT NULL CHECK (role IN ('student', 'professional')),
   organization TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
-  culqi_order_id TEXT,
+  payment_order_id TEXT,
+  payment_method TEXT CHECK (payment_method IN ('yape', 'card', 'manual')),
   ticket_code UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE
 );
 

@@ -1,6 +1,7 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter } from 'next/font/google'
+import Script from 'next/script'
 
 import './globals.css'
 
@@ -42,6 +43,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <Script 
+          src="https://sdk.mercadopago.com/js/v2" 
+          strategy="beforeInteractive" 
+        />
+      </head>
       <body>{children}</body>
     </html>
   )

@@ -173,11 +173,11 @@ export default function AttendeeDetailsModal({
                       S/ {ticketPrice.toFixed(2)}
                     </p>
                   </div>
-                  {attendee.culqi_order_id && (
+                  {attendee.payment_order_id && (
                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                      <p className="text-xs text-green-700/70 mb-1">ID de Orden</p>
+                      <p className="text-xs text-green-700/70 mb-1">ID de Transacción</p>
                       <p className="font-mono text-sm font-semibold text-green-700 break-all">
-                        {attendee.culqi_order_id}
+                        {attendee.payment_order_id}
                       </p>
                     </div>
                   )}

@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         // Actualizar lista local
         setAttendees(prev => prev.map(a =>
           a.id === attendee.id
-            ? { ...a, status: 'paid' as const, culqi_order_id: `manual_${Date.now()}` }
+            ? { ...a, status: 'paid' as const, payment_order_id: `manual_${Date.now()}`, payment_method: 'manual' as const }
             : a
         ))
         console.log('[Simposio] Attendee marked as paid:', attendee.id)

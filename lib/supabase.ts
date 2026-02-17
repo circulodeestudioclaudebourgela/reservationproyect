@@ -13,6 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 export type AttendeeRole = 'student' | 'professional'
 export type AttendeeStatus = 'pending' | 'paid'
 
+export type PaymentMethod = 'yape' | 'card' | 'manual'
+
 export interface Attendee {
   id: string
   created_at: string
@@ -23,7 +25,8 @@ export interface Attendee {
   role: AttendeeRole
   organization?: string | null
   status: AttendeeStatus
-  culqi_order_id?: string | null
+  payment_order_id?: string | null
+  payment_method?: PaymentMethod | null
   ticket_code: string // UUID for QR
 }
 

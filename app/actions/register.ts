@@ -2,6 +2,7 @@
 
 import { supabase, type Attendee, type AttendeeInsert } from '@/lib/supabase'
 import { registrationSchema } from '@/lib/validations'
+import { sendEmail, generatePendingPaymentEmail } from '@/lib/email'
 import { z } from 'zod'
 
 export type RegisterResult = 
@@ -93,14 +94,16 @@ export async function registerAttendee(
  */
 export async function processPayment(
   attendeeId: string,
-  culqiOrderId: string
+  paymentOrderId: string,
+  paymentMethod: 'yape' | 'card' | 'manual' = 'manual'
 ): Promise<RegisterResult> {
   try {
     const { data, error } = await supabase
       .from('attendees')
       .update({ 
         status: 'paid',
-        culqi_order_id: culqiOrderId
+        payment_order_id: paymentOrderId,
+        payment_method: paymentMethod,
       })
       .eq('id', attendeeId)
       .select()
@@ -193,7 +196,11 @@ export async function markAsPaid(attendeeId: string): Promise<RegisterResult> {
   try {
     const { data, error } = await supabase
       .from('attendees')
-      .update({ status: 'paid' })
+      .update({ 
+        status: 'paid',
+        payment_method: 'manual',
+        payment_order_id: `manual_${Date.now()}`,
+      })
       .eq('id', attendeeId)
       .select()
       .single()
@@ -206,7 +213,36 @@ export async function markAsPaid(attendeeId: string): Promise<RegisterResult> {
       }
     }
 
-    return { success: true, data: data as Attendee }
+    const attendee = data as Attendee
+
+    // Enviar email de confirmación al marcar como pagado
+    try {
+      const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+      const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+
+      const { generatePaymentConfirmationEmail } = await import('@/lib/email')
+      const emailHtml = generatePaymentConfirmationEmail({
+        fullName: attendee.full_name,
+        email: attendee.email,
+        dni: attendee.dni,
+        phone: attendee.phone,
+        role: attendee.role,
+        organization: attendee.organization || undefined,
+        ticketCode: attendee.ticket_code,
+        amount,
+      })
+
+      await sendEmail(
+        attendee.email,
+        '✅ ¡Tu registro al II Simposio Veterinario está confirmado!',
+        emailHtml
+      )
+      console.log('[Simposio] Confirmation email sent to:', attendee.email)
+    } catch (emailError) {
+      console.error('[Simposio] Email send error:', emailError)
+    }
+
+    return { success: true, data: attendee }
   } catch (error) {
     console.error('[Simposio] Mark as paid error:', error)
     return { 

@@ -7,28 +7,78 @@
 Create a `.env.local` file in the root directory:
 
 ```env
-# Supabase Configuration (Optional for demo)
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# MercadoPago Configuration
+NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=your_mp_public_key
+MERCADOPAGO_ACCESS_TOKEN=your_mp_access_token
+MERCADOPAGO_WEBHOOK_SECRET=your_mp_webhook_secret
+
+# SMTP Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+EMAIL_FROM="Simposio Veterinario <noreply@tudominio.com>"
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-For now, the app works with mock data. To integrate Supabase:
+### 2. Supabase Setup
 
-### 2. Supabase Setup (Optional)
+1. Crea un proyecto en https://supabase.com
+2. Ejecuta el script `scripts/setup-database.sql`:
+   - Copia el SQL del archivo
+   - Ve a Supabase → SQL Editor → New Query
+   - Pega y ejecuta el SQL
+3. Copia tu URL y anon key desde Supabase Settings → API
+4. Actualiza `.env.local` con tus credenciales
 
-If you want to use a real database:
+> **Migración desde versión anterior:** Si ya tienes una base de datos existente con `culqi_order_id`,
+> ejecuta `scripts/migrate-payment-column.sql` para renombrar la columna a `payment_order_id`
+> y agregar la columna `payment_method`.
 
-1. Create a Supabase project at https://supabase.com
-2. Run the migration script from `scripts/setup-database.sql`:
-   - Copy the SQL from the file
-   - Go to Supabase → SQL Editor → New Query
-   - Paste and execute the SQL
-3. Copy your project URL and anon key from Supabase settings
-4. Update `.env.local` with your credentials
+### 3. MercadoPago Setup
 
-### 3. Database Schema
+1. Crea una cuenta en https://www.mercadopago.com.pe/developers
+2. Ve a **Tus integraciones** → Crea una nueva aplicación
+3. Copia las credenciales:
+   - **Public Key** → `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY`
+   - **Access Token** → `MERCADOPAGO_ACCESS_TOKEN`
+4. Configura el webhook:
+   - URL: `https://tu-dominio.com/api/webhooks/mercadopago`
+   - Eventos: `payment` (Pagos)
+   - Copia el secret → `MERCADOPAGO_WEBHOOK_SECRET`
 
-The application expects these tables:
+#### Tarjetas de prueba (Sandbox)
+
+| Tarjeta | Número | CVV | Vencimiento | Resultado |
+|---------|--------|-----|-------------|-----------|
+| Mastercard | 5031 7557 3453 0604 | 123 | 11/25 | Aprobado |
+| Visa | 4509 9535 6623 3704 | 123 | 11/25 | Aprobado |
+| Mastercard | 5031 7557 3453 0604 | 456 | 11/25 | Rechazado |
+
+DNI de prueba: `12345678`
+
+#### Métodos de pago habilitados
+- **Yape**: Pago con código OTP + número de teléfono
+- **Tarjetas de crédito/débito**: Visa, Mastercard, etc.
+
+### 4. Email Setup (Gmail)
+
+1. Ve a tu cuenta de Google → Seguridad → Verificación en dos pasos (activar)
+2. Genera una **Contraseña de aplicación**:
+   - En Google Account → Seguridad → Contraseñas de aplicaciones
+   - Selecciona "Otro" → Nombre: "Simposio"
+   - Copia la contraseña generada → `SMTP_PASSWORD`
+3. Usa tu email → `SMTP_USER`
+
+### 5. Database Schema
+
+La aplicación usa estas tablas:
 
 #### attendees
 ```sql
@@ -41,6 +91,8 @@ The application expects these tables:
 - estado: ENUM (pending, paid, cancelled) - default: pending
 - monto_pago: DECIMAL (default: 0)
 - numero_referencia: TEXT (optional)
+- payment_order_id: TEXT (optional) - ID de transacción MercadoPago
+- payment_method: TEXT (yape, card, manual) - Método de pago usado
 - qr_code: TEXT (optional)
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
@@ -61,37 +113,39 @@ The application expects these tables:
 
 ### Development Mode
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
 
 ### Production Build
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 ## Testing
 
 ### Public Landing Page
-1. Navigate to `/`
-2. Browse hero section, about, agenda, and location
-3. Fill out registration form
-4. Proceed to payment modal
-5. Complete mock payment
-6. View success screen with mock QR code
+1. Navega a `/`
+2. Explora hero section, about, agenda y ubicación
+3. Llena el formulario de registro
+4. Procede al modal de pago
+5. Selecciona Yape o Tarjeta
+6. Completa el pago con MercadoPago (usa tarjetas de prueba en sandbox)
+7. Verifica email de confirmación
 
 ### Admin Dashboard
-1. Navigate to `/admin/login`
-2. Use demo credentials:
+1. Navega a `/admin/login`
+2. Usa credenciales demo:
    - Email: `admin@simposio.pe`
    - Password: `admin123`
-3. View statistics and attendee table
-4. Search registrations
-5. View attendee details
-6. Mark registrations as paid
-7. Delete registrations
+3. Ve estadísticas y tabla de asistentes
+4. Busca registros
+5. Ve detalles del asistente (incluye ID de transacción y método de pago)
+6. Marca registros como pagados (envía email de confirmación)
+7. Elimina registros
+8. Exporta datos a Excel/CSV
 
 ## Customization Guide
 
@@ -155,20 +209,25 @@ Edit CSS variables in `/app/globals.css`:
 
 ## Integration with Real Services
 
-### Culqi Payment Gateway
-1. Get Culqi API keys from https://culqi.com
-2. Create server action for payment processing
-3. Replace mock payment in `/components/modals/checkout-modal.tsx`
+### MercadoPago Payment Gateway
+Ya integrado. Soporta:
+- **Yape**: Token generado con SDK JS MP → OTP + teléfono → pago server-side
+- **Tarjetas**: Tokenización via MP API → pago server-side
+- **Webhooks**: Endpoint `/api/webhooks/mercadopago` para notificaciones IPN
+- **Verificación**: Validación HMAC de firma del webhook
 
 ### Email Notifications
-1. Set up Resend (https://resend.com) or another provider
-2. Create email templates
-3. Send emails on successful registration
+Ya integrado con Nodemailer:
+- Email de confirmación al completar pago
+- Email de confirmación al marcar como pagado desde admin
+- Plantillas HTML responsivas
 
-### QR Code Generation
-1. Install QR code library: `npm install qrcode.react`
-2. Generate QR codes in checkout modal
-3. Update QR code placeholder in success screen
+### Webhook Configuration
+En tu panel de MercadoPago Developers:
+1. Ve a Webhooks
+2. URL de producción: `https://tu-dominio.com/api/webhooks/mercadopago`
+3. Selecciona evento: `payment`
+4. El webhook actualiza automáticamente el estado del asistente
 
 ## Deployment
 
@@ -184,17 +243,18 @@ Edit CSS variables in `/app/globals.css`:
 
 ## Security Checklist
 
-- [ ] Implement proper authentication (don't use localStorage in production)
-- [ ] Use HTTPS for all communications
-- [ ] Validate all inputs server-side
-- [ ] Implement CSRF protection
-- [ ] Use environment variables for sensitive data
-- [ ] Enable Row Level Security (RLS) in Supabase
-- [ ] Rate limit registration endpoint
-- [ ] Sanitize database queries
-- [ ] Implement proper error handling
-- [ ] Add logging for security events
-- [ ] Regular security audits
+- [x] Pagos procesados server-side (tokens, no datos de tarjeta)
+- [x] Variables de entorno para datos sensibles
+- [x] Validación de webhook con HMAC signature
+- [x] Validación de inputs server-side con Zod
+- [ ] Implementar autenticación real (no usar localStorage en producción)
+- [ ] Usar HTTPS para todas las comunicaciones
+- [ ] Implementar protección CSRF
+- [ ] Habilitar Row Level Security (RLS) en Supabase
+- [ ] Rate limit en endpoint de registro
+- [ ] Sanitizar queries a base de datos
+- [ ] Agregar logging para eventos de seguridad
+- [ ] Auditorías de seguridad regulares
 
 ## Troubleshooting
 

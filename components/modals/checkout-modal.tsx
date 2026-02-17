@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import Image from 'next/image'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { 
   X, 
   CheckCircle2, 
@@ -20,51 +21,67 @@ import {
   Clock,
   AlertCircle,
   ChevronLeft,
-  Info
+  Info,
+  Lock
 } from 'lucide-react'
 import type { RegistrationForm } from '@/lib/validations'
+import { registerAttendee } from '@/app/actions/register'
+import { processYapePayment, processCardPayment } from '@/app/actions/payment'
+
+// Declarar tipos para MP SDK global
+declare global {
+  interface Window {
+    MercadoPago: new (publicKey: string, options?: Record<string, unknown>) => MPInstance
+  }
+}
+
+interface MPInstance {
+  yape: (options: { otp: string; phoneNumber: string }) => {
+    create: () => Promise<{ id: string }>
+  }
+  cardForm: (options: Record<string, unknown>) => MPCardForm
+}
+
+interface MPCardForm {
+  getCardFormData: () => {
+    token: string
+    payment_method_id: string
+    installments: number
+    issuer_id: string
+  }
+  unmount: () => void
+}
 
 interface CheckoutModalProps {
   formData: RegistrationForm | null
   onClose: () => void
 }
 
-type PaymentMethod = 'card' | 'yape' | 'plin' | 'paypal' | null
-type CheckoutStep = 'summary' | 'payment-select' | 'yape-plin' | 'processing' | 'pending' | 'success' | 'error'
+type PaymentMethod = 'card' | 'yape' | null
+type CheckoutStep = 'summary' | 'payment-select' | 'yape-form' | 'card-form' | 'processing' | 'success' | 'error'
 
 const CURRENCY = 'S/'
-const EARLY_BIRD_PRICE = 250.00  // Precio hasta abril 2026
-const REGULAR_PRICE = 350.00    // Precio después de abril 2026
+const EARLY_BIRD_PRICE = 250.00
+const REGULAR_PRICE = 350.00
 const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
 
 // Comisiones de transacción
 const FEES = {
-  card: 0.05,        // POS: 5%
-  paypal: 0.055,     // PayPal: 5.5%
-  paypalFixed: 0.50, // PayPal: + $0.50 (en USD, ~S/2 aprox)
-  yape: 0,           // Yape: sin comisión
-  plin: 0,           // Plin: sin comisión
+  card: 0.05,   // Tarjeta: 5%
+  yape: 0,      // Yape: sin comisión
 }
 
-// Función para calcular el precio base según fecha
 const getBasePrice = () => {
-  const now = new Date()
-  return now < EARLY_BIRD_DEADLINE ? EARLY_BIRD_PRICE : REGULAR_PRICE
+  return new Date() < EARLY_BIRD_DEADLINE ? EARLY_BIRD_PRICE : REGULAR_PRICE
 }
 
-// Función para calcular comisión según método de pago
 const calculateFee = (basePrice: number, method: PaymentMethod) => {
-  if (!method || method === 'yape' || method === 'plin') return 0
+  if (!method || method === 'yape') return 0
   if (method === 'card') return basePrice * FEES.card
-  if (method === 'paypal') return (basePrice * FEES.paypal) + (FEES.paypalFixed * 3.8) // ~S/1.90
   return 0
 }
 
-// Configuración de Yape/Plin (actualizar con datos reales)
-const YAPE_PLIN_CONFIG = {
-  phone: '999888777', // Número para recibir pagos
-  holder: 'Círculo de Estudios Claude Bourgelat',
-}
+const MP_PUBLIC_KEY = process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY || ''
 
 export default function CheckoutModal({ formData, onClose }: CheckoutModalProps) {
   const [step, setStep] = useState<CheckoutStep>('summary')
@@ -72,6 +89,23 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const [ticketCode, setTicketCode] = useState<string>('')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [copied, setCopied] = useState(false)
+  const [attendeeId, setAttendeeId] = useState<string>('')
+
+  // Yape form state
+  const [yapePhone, setYapePhone] = useState('')
+  const [yapeOtp, setYapeOtp] = useState('')
+  const [isYapeSubmitting, setIsYapeSubmitting] = useState(false)
+
+  // Card form state
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardExpMonth, setCardExpMonth] = useState('')
+  const [cardExpYear, setCardExpYear] = useState('')
+  const [cardSecurityCode, setCardSecurityCode] = useState('')
+  const [cardholderName, setCardholderName] = useState('')
+  const [cardDocNumber, setCardDocNumber] = useState('')
+  const [isCardSubmitting, setIsCardSubmitting] = useState(false)
+
+  const mpRef = useRef<MPInstance | null>(null)
 
   // Calcular precios dinámicamente
   const basePrice = useMemo(() => getBasePrice(), [])
@@ -79,83 +113,158 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const fee = useMemo(() => calculateFee(basePrice, paymentMethod), [basePrice, paymentMethod])
   const totalPrice = useMemo(() => basePrice + fee, [basePrice, fee])
 
-  // Handler para Openpay (tarjetas)
-  const handleCardPayment = async () => {
-    setPaymentMethod('card')
-    setStep('processing')
+  // Inicializar MP SDK
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.MercadoPago && MP_PUBLIC_KEY) {
+      try {
+        mpRef.current = new window.MercadoPago(MP_PUBLIC_KEY)
+        console.log('[Simposio] MercadoPago SDK initialized')
+      } catch (error) {
+        console.error('[Simposio] MP SDK init error:', error)
+      }
+    }
+  }, [])
+
+  // Registrar attendee en BD al avanzar al pago
+  const ensureAttendeeRegistered = useCallback(async (): Promise<string | null> => {
+    if (attendeeId) return attendeeId
+    if (!formData) return null
+
+    const result = await registerAttendee(formData)
+    if (result.success) {
+      setAttendeeId(result.data.id)
+      setTicketCode(result.data.ticket_code)
+      return result.data.id
+    } else {
+      setErrorMessage(result.error)
+      setStep('error')
+      return null
+    }
+  }, [attendeeId, formData])
+
+  // ============================================
+  // Handle Yape Payment via MercadoPago SDK
+  // ============================================
+  const handleYapePayment = async () => {
+    setIsYapeSubmitting(true)
     setErrorMessage('')
-    
+
     try {
-      // TODO: Integrar Openpay SDK real
-      // Por ahora simulamos el proceso
-      await new Promise(resolve => setTimeout(resolve, 2500))
-      
-      const isSuccess = Math.random() > 0.1
-      
-      if (isSuccess) {
-        const code = crypto.randomUUID()
-        setTicketCode(code)
-        console.log('[Simposio] Card payment successful - Ticket:', code)
+      const aid = await ensureAttendeeRegistered()
+      if (!aid) return
+
+      setStep('processing')
+
+      if (!mpRef.current) {
+        throw new Error('MercadoPago SDK no disponible. Recarga la página.')
+      }
+
+      // Generar token de Yape usando el SDK
+      const yape = mpRef.current.yape({
+        otp: yapeOtp,
+        phoneNumber: yapePhone,
+      })
+      const yapeToken = await yape.create()
+
+      if (!yapeToken?.id) {
+        throw new Error('No se pudo generar el token de Yape. Verifica tu OTP y número de celular.')
+      }
+
+      // Procesar pago en el servidor
+      const result = await processYapePayment(
+        aid,
+        yapeToken.id,
+        basePrice,
+        formData!.email
+      )
+
+      if (result.success) {
+        setTicketCode(result.data.ticket_code)
+        console.log('[Simposio] Yape payment success - Ticket:', result.data.ticket_code)
         setStep('success')
       } else {
-        throw new Error('El pago fue rechazado. Verifica los datos de tu tarjeta.')
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('[Simposio] Yape payment error:', error)
+      setErrorMessage(error instanceof Error ? error.message : 'Error al procesar pago con Yape')
+      setStep('error')
+    } finally {
+      setIsYapeSubmitting(false)
+    }
+  }
+
+  // ============================================
+  // Handle Card Payment via MercadoPago SDK
+  // ============================================
+  const handleCardPayment = async () => {
+    setIsCardSubmitting(true)
+    setErrorMessage('')
+
+    try {
+      const aid = await ensureAttendeeRegistered()
+      if (!aid) return
+
+      setStep('processing')
+
+      if (!mpRef.current) {
+        throw new Error('MercadoPago SDK no disponible. Recarga la página.')
+      }
+
+      // Crear token manualmente vía API de MP
+      const tokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens?public_key=' + MP_PUBLIC_KEY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          card_number: cardNumber.replace(/\s/g, ''),
+          expiration_month: parseInt(cardExpMonth),
+          expiration_year: parseInt(cardExpYear.length === 2 ? '20' + cardExpYear : cardExpYear),
+          security_code: cardSecurityCode,
+          cardholder: {
+            name: cardholderName,
+            identification: {
+              type: 'DNI',
+              number: cardDocNumber || formData!.dni,
+            },
+          },
+        }),
+      })
+
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json().catch(() => ({}))
+        console.error('[Simposio] Token creation error:', errorData)
+        throw new Error('Error al tokenizar la tarjeta. Verifica los datos e intenta de nuevo.')
+      }
+
+      const tokenData = await tokenResponse.json()
+
+      if (!tokenData.id) {
+        throw new Error('No se pudo generar el token de la tarjeta.')
+      }
+
+      // Procesar pago en el servidor
+      const result = await processCardPayment(
+        aid,
+        tokenData.id,
+        totalPrice,
+        formData!.email,
+        1,
+        tokenData.payment_method_id || 'visa'
+      )
+
+      if (result.success) {
+        setTicketCode(result.data.ticket_code)
+        console.log('[Simposio] Card payment success - Ticket:', result.data.ticket_code)
+        setStep('success')
+      } else {
+        throw new Error(result.error)
       }
     } catch (error) {
       console.error('[Simposio] Card payment error:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Error al procesar el pago')
+      setErrorMessage(error instanceof Error ? error.message : 'Error al procesar pago con tarjeta')
       setStep('error')
-    }
-  }
-
-  // Handler para PayPal
-  const handlePayPalPayment = async () => {
-    setPaymentMethod('paypal')
-    setStep('processing')
-    setErrorMessage('')
-    
-    try {
-      // TODO: Integrar PayPal SDK real
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const isSuccess = Math.random() > 0.1
-      
-      if (isSuccess) {
-        const code = crypto.randomUUID()
-        setTicketCode(code)
-        console.log('[Simposio] PayPal payment successful - Ticket:', code)
-        setStep('success')
-      } else {
-        throw new Error('El pago con PayPal fue cancelado o rechazado.')
-      }
-    } catch (error) {
-      console.error('[Simposio] PayPal payment error:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Error al procesar el pago')
-      setStep('error')
-    }
-  }
-
-  // Handler para Yape/Plin
-  const handleYapePlinSelect = (method: 'yape' | 'plin') => {
-    setPaymentMethod(method)
-    setStep('yape-plin')
-  }
-
-  // Confirmar que realizó el pago Yape/Plin
-  const handleYapePlinConfirm = async () => {
-    setStep('processing')
-    
-    try {
-      // Registrar como pendiente de verificación
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const code = crypto.randomUUID()
-      setTicketCode(code)
-      console.log('[Simposio] Yape/Plin pending verification - Ticket:', code)
-      setStep('pending')
-    } catch (error) {
-      console.error('[Simposio] Registration error:', error)
-      setErrorMessage('Error al registrar. Por favor intenta nuevamente.')
-      setStep('error')
+    } finally {
+      setIsCardSubmitting(false)
     }
   }
 
@@ -173,7 +282,8 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
 
   const handleBack = () => {
     if (step === 'payment-select') setStep('summary')
-    else if (step === 'yape-plin') setStep('payment-select')
+    else if (step === 'yape-form') setStep('payment-select')
+    else if (step === 'card-form') setStep('payment-select')
     else setStep('summary')
   }
 
@@ -186,11 +296,11 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const getStepTitle = () => {
     switch (step) {
       case 'success': return '¡Registro Exitoso!'
-      case 'pending': return 'Pago Pendiente de Verificación'
       case 'error': return 'Error en el Pago'
       case 'processing': return 'Procesando...'
       case 'payment-select': return 'Selecciona Método de Pago'
-      case 'yape-plin': return `Pagar con ${paymentMethod === 'yape' ? 'Yape' : 'Plin'}`
+      case 'yape-form': return 'Pagar con Yape'
+      case 'card-form': return 'Pagar con Tarjeta'
       default: return 'Confirmar Registro'
     }
   }
@@ -202,7 +312,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-card z-10">
             <div className="flex items-center gap-3">
-              {(step === 'payment-select' || step === 'yape-plin') && (
+              {(step === 'payment-select' || step === 'yape-form' || step === 'card-form') && (
                 <button
                   onClick={handleBack}
                   className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -327,9 +437,12 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
 
               {/* Payment options */}
               <div className="space-y-3">
-                {/* Yape - Sin comisión */}
+                {/* Yape via MercadoPago - Sin comisión */}
                 <button
-                  onClick={() => handleYapePlinSelect('yape')}
+                  onClick={() => {
+                    setPaymentMethod('yape')
+                    setStep('yape-form')
+                  }}
                   className="w-full p-4 border border-border rounded-xl hover:border-secondary hover:bg-secondary/5 transition-all flex items-center gap-4 text-left group"
                 >
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -346,28 +459,12 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   </div>
                 </button>
 
-                {/* Plin - Sin comisión */}
+                {/* Tarjeta via MercadoPago - Comisión 5% */}
                 <button
-                  onClick={() => handleYapePlinSelect('plin')}
-                  className="w-full p-4 border border-border rounded-xl hover:border-secondary hover:bg-secondary/5 transition-all flex items-center gap-4 text-left group"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl flex items-center justify-center">
-                    <Smartphone className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground group-hover:text-secondary transition-colors">
-                      Plin
-                    </p>
-                    <p className="text-sm text-muted-foreground">Sin comisión • {CURRENCY} {basePrice.toFixed(2)}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Sin fee</span>
-                  </div>
-                </button>
-
-                {/* Tarjeta/Openpay - Comisión 5% */}
-                <button
-                  onClick={handleCardPayment}
+                  onClick={() => {
+                    setPaymentMethod('card')
+                    setStep('card-form')
+                  }}
                   className="w-full p-4 border border-border rounded-xl hover:border-secondary hover:bg-secondary/5 transition-all flex items-center gap-4 text-left group"
                 >
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
@@ -383,92 +480,81 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   </div>
                   <Shield className="w-5 h-5 text-muted-foreground" />
                 </button>
-
-                {/* PayPal - Comisión 5.5% + $0.50 */}
-                <button
-                  onClick={handlePayPalPayment}
-                  className="w-full p-4 border border-border rounded-xl hover:border-secondary hover:bg-secondary/5 transition-all flex items-center gap-4 text-left group"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#003087] to-[#009cde] rounded-xl flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">PP</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground group-hover:text-secondary transition-colors">
-                      PayPal
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      +5.5% + $0.50 • Total: {CURRENCY} {(basePrice * 1.055 + 1.90).toFixed(2)}
-                    </p>
-                  </div>
-                </button>
               </div>
 
               {/* Fee explanation */}
               <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  Las comisiones de tarjeta y PayPal corresponden a los costos de procesamiento de pagos.
-                  Yape y Plin no tienen comisión adicional.
+                  Las comisiones de tarjeta corresponden a los costos de procesamiento.
+                  Yape no tiene comisión adicional. Todos los pagos son procesados de forma segura por MercadoPago.
                 </span>
               </div>
 
               {/* Security note */}
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
                 <Shield className="w-4 h-4" />
-                <span>Todos los pagos son seguros y encriptados</span>
+                <span>Pago seguro procesado por MercadoPago</span>
               </div>
             </div>
           )}
 
-          {/* Yape/Plin Payment Step */}
-          {step === 'yape-plin' && (
+          {/* Yape Payment Form */}
+          {step === 'yape-form' && (
             <div className="p-6 space-y-6">
               {/* Instructions */}
               <div className="bg-muted/50 p-4 rounded-xl space-y-3">
                 <h4 className="font-semibold text-foreground flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-secondary" />
-                  Instrucciones de pago
+                  Instrucciones
                 </h4>
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Abre tu app de {paymentMethod === 'yape' ? 'Yape' : 'Plin'}</li>
-                  <li>Envía <span className="font-bold text-foreground">{CURRENCY} {basePrice.toFixed(2)}</span> al siguiente número</li>
-                  <li>Agrega tu DNI ({formData.dni}) en el mensaje/descripción</li>
-                  <li>Confirma el pago abajo</li>
+                  <li>Abre tu app de <span className="font-semibold text-foreground">Yape</span></li>
+                  <li>Genera tu código OTP (en Yape → Más opciones → Pagar en web)</li>
+                  <li>Ingresa tu <span className="font-semibold text-foreground">número de celular</span> y el <span className="font-semibold text-foreground">código OTP</span> abajo</li>
                 </ol>
               </div>
 
-              {/* Payment details card */}
-              <div className={`p-6 rounded-xl text-white ${paymentMethod === 'yape' ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-teal-400 to-teal-500'}`}>
-                {/* QR Code placeholder */}
-                <div className="bg-white rounded-xl p-4 mb-4 mx-auto w-fit">
-                  <div className="w-40 h-40 bg-muted rounded-lg flex items-center justify-center">
-                    <QrCode className="w-24 h-24 text-primary" />
-                  </div>
+              {/* Yape form */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="yape-phone" className="text-foreground font-semibold flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    Número de Celular (Yape)
+                  </Label>
+                  <Input
+                    id="yape-phone"
+                    type="tel"
+                    placeholder="987654321"
+                    maxLength={9}
+                    value={yapePhone}
+                    onChange={(e) => setYapePhone(e.target.value.replace(/\D/g, ''))}
+                    className="bg-background border-border h-12 text-lg tracking-wider"
+                    disabled={isYapeSubmitting}
+                  />
                 </div>
 
-                {/* Phone number */}
-                <div className="text-center space-y-2">
-                  <p className="text-white/80 text-sm">Número de celular</p>
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-2xl font-bold tracking-wider">{YAPE_PLIN_CONFIG.phone}</span>
-                    <button
-                      onClick={() => copyToClipboard(YAPE_PLIN_CONFIG.phone)}
-                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                      aria-label="Copiar número"
-                    >
-                      <Copy className="w-5 h-5" />
-                    </button>
-                  </div>
-                  {copied && (
-                    <p className="text-xs text-white/80">¡Copiado!</p>
-                  )}
-                  <p className="text-white/70 text-sm">{YAPE_PLIN_CONFIG.holder}</p>
+                <div className="space-y-2">
+                  <Label htmlFor="yape-otp" className="text-foreground font-semibold flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-muted-foreground" />
+                    Código OTP (6 dígitos)
+                  </Label>
+                  <Input
+                    id="yape-otp"
+                    type="text"
+                    placeholder="123456"
+                    maxLength={6}
+                    value={yapeOtp}
+                    onChange={(e) => setYapeOtp(e.target.value.replace(/\D/g, ''))}
+                    className="bg-background border-border h-12 text-lg tracking-[0.3em] text-center font-mono"
+                    disabled={isYapeSubmitting}
+                  />
                 </div>
               </div>
 
               {/* Amount to pay */}
               <div className="border border-border rounded-xl p-4 flex justify-between items-center">
-                <span className="text-muted-foreground">Monto exacto:</span>
+                <span className="text-muted-foreground">Monto a pagar:</span>
                 <span className="font-serif text-2xl font-bold text-secondary">
                   {CURRENCY} {basePrice.toFixed(2)}
                 </span>
@@ -481,20 +567,178 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   <div className="text-sm">
                     <p className="font-medium text-amber-800 dark:text-amber-200">Importante</p>
                     <p className="text-amber-700 dark:text-amber-300">
-                      Tu inscripción quedará pendiente hasta verificar el pago (máximo 24 horas).
-                      Recibirás un correo de confirmación.
+                      El código OTP es válido por un corto tiempo. Ingrésalo rápidamente después de generarlo en la app de Yape.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Confirm button */}
+              {/* Submit button */}
               <Button
-                onClick={handleYapePlinConfirm}
-                className={`w-full font-semibold py-6 text-lg text-white ${paymentMethod === 'yape' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-teal-500 hover:bg-teal-600'}`}
+                onClick={handleYapePayment}
+                disabled={yapePhone.length !== 9 || yapeOtp.length !== 6 || isYapeSubmitting}
+                className="w-full bg-purple-500 hover:bg-purple-600 font-semibold py-6 text-lg text-white disabled:opacity-50"
               >
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-                Ya realicé el pago
+                {isYapeSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Procesando...
+                  </span>
+                ) : (
+                  <>
+                    <Smartphone className="w-5 h-5 mr-2" />
+                    Pagar {CURRENCY} {basePrice.toFixed(2)} con Yape
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Card Payment Form */}
+          {step === 'card-form' && (
+            <div className="p-6 space-y-5">
+              {/* Amount */}
+              <div className="bg-primary/5 p-4 rounded-xl flex justify-between items-center">
+                <span className="text-foreground font-medium">Total con comisión:</span>
+                <span className="font-serif text-2xl font-bold text-secondary">
+                  {CURRENCY} {(basePrice * 1.05).toFixed(2)}
+                </span>
+              </div>
+
+              {/* Card form fields */}
+              <div className="space-y-4">
+                {/* Card Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="card-number" className="text-foreground font-semibold flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-muted-foreground" />
+                    Número de Tarjeta
+                  </Label>
+                  <Input
+                    id="card-number"
+                    type="text"
+                    placeholder="4509 9535 6623 3704"
+                    maxLength={19}
+                    value={cardNumber}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '')
+                      const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ')
+                      setCardNumber(formatted)
+                    }}
+                    className="bg-background border-border h-12 tracking-wider font-mono"
+                    disabled={isCardSubmitting}
+                  />
+                </div>
+
+                {/* Expiry + CVV */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="exp-month" className="text-foreground text-sm font-semibold">Mes</Label>
+                    <Input
+                      id="exp-month"
+                      type="text"
+                      placeholder="12"
+                      maxLength={2}
+                      value={cardExpMonth}
+                      onChange={(e) => setCardExpMonth(e.target.value.replace(/\D/g, ''))}
+                      className="bg-background border-border h-12 text-center font-mono"
+                      disabled={isCardSubmitting}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="exp-year" className="text-foreground text-sm font-semibold">Año</Label>
+                    <Input
+                      id="exp-year"
+                      type="text"
+                      placeholder="2030"
+                      maxLength={4}
+                      value={cardExpYear}
+                      onChange={(e) => setCardExpYear(e.target.value.replace(/\D/g, ''))}
+                      className="bg-background border-border h-12 text-center font-mono"
+                      disabled={isCardSubmitting}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv" className="text-foreground text-sm font-semibold">CVV</Label>
+                    <Input
+                      id="cvv"
+                      type="text"
+                      placeholder="123"
+                      maxLength={4}
+                      value={cardSecurityCode}
+                      onChange={(e) => setCardSecurityCode(e.target.value.replace(/\D/g, ''))}
+                      className="bg-background border-border h-12 text-center font-mono"
+                      disabled={isCardSubmitting}
+                    />
+                  </div>
+                </div>
+
+                {/* Cardholder Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="cardholder-name" className="text-foreground text-sm font-semibold">
+                    Nombre del titular
+                  </Label>
+                  <Input
+                    id="cardholder-name"
+                    type="text"
+                    placeholder="Como aparece en la tarjeta"
+                    value={cardholderName}
+                    onChange={(e) => setCardholderName(e.target.value.toUpperCase())}
+                    className="bg-background border-border h-12"
+                    disabled={isCardSubmitting}
+                  />
+                </div>
+
+                {/* DNI */}
+                <div className="space-y-2">
+                  <Label htmlFor="card-dni" className="text-foreground text-sm font-semibold">
+                    DNI del titular
+                  </Label>
+                  <Input
+                    id="card-dni"
+                    type="text"
+                    placeholder={formData.dni}
+                    maxLength={8}
+                    value={cardDocNumber}
+                    onChange={(e) => setCardDocNumber(e.target.value.replace(/\D/g, ''))}
+                    className="bg-background border-border h-12 font-mono"
+                    disabled={isCardSubmitting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Si el titular es otro, ingresa su DNI. Si no, se usará tu DNI ({formData.dni}).
+                  </p>
+                </div>
+              </div>
+
+              {/* Security note */}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>Tus datos son encriptados y procesados de forma segura por MercadoPago. No almacenamos información de tu tarjeta.</span>
+              </div>
+
+              {/* Submit button */}
+              <Button
+                onClick={handleCardPayment}
+                disabled={
+                  cardNumber.replace(/\s/g, '').length < 13 ||
+                  cardExpMonth.length < 1 ||
+                  cardExpYear.length < 2 ||
+                  cardSecurityCode.length < 3 ||
+                  cardholderName.length < 3 ||
+                  isCardSubmitting
+                }
+                className="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-6 text-lg text-white disabled:opacity-50"
+              >
+                {isCardSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Procesando pago...
+                  </span>
+                ) : (
+                  <>
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Pagar {CURRENCY} {(basePrice * 1.05).toFixed(2)}
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -505,92 +749,16 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
               <div className="relative">
                 <div className="w-20 h-20 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin" />
                 {paymentMethod === 'card' && <CreditCard className="w-8 h-8 text-secondary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
-                {(paymentMethod === 'yape' || paymentMethod === 'plin') && <Smartphone className="w-8 h-8 text-secondary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
-                {paymentMethod === 'paypal' && <span className="text-secondary font-bold absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">PP</span>}
+                {paymentMethod === 'yape' && <Smartphone className="w-8 h-8 text-secondary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
               </div>
               <div className="text-center space-y-2">
                 <p className="text-foreground font-medium text-lg">
-                  {(paymentMethod === 'yape' || paymentMethod === 'plin') 
-                    ? 'Registrando tu inscripción...' 
-                    : 'Procesando tu pago...'}
+                  Procesando tu pago con {paymentMethod === 'yape' ? 'Yape' : 'Tarjeta'}...
                 </p>
-                <p className="text-sm text-muted-foreground">Por favor no cierres esta ventana</p>
-              </div>
-            </div>
-          )}
-
-          {/* Pending Step (for Yape/Plin) */}
-          {step === 'pending' && (
-            <div className="p-6 space-y-6">
-              {/* Pending icon */}
-              <div className="flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Clock className="w-12 h-12 text-amber-600 dark:text-amber-400" />
-                </div>
-              </div>
-
-              {/* Message */}
-              <div className="text-center space-y-2">
-                <h3 className="font-serif text-xl font-bold text-foreground">
-                  ¡Tu inscripción está en proceso!
-                </h3>
-                <p className="text-muted-foreground">
-                  Verificaremos tu pago en las próximas 24 horas.
+                <p className="text-sm text-muted-foreground">
+                  Por favor no cierres esta ventana. Esto puede tomar unos segundos.
                 </p>
               </div>
-
-              {/* Ticket code */}
-              <div className="bg-muted/50 p-4 rounded-xl">
-                <p className="text-xs text-muted-foreground mb-1">Código de registro</p>
-                <div className="flex items-center justify-between">
-                  <p className="font-mono text-sm text-foreground truncate pr-2">{ticketCode}</p>
-                  <button
-                    onClick={() => copyToClipboard(ticketCode)}
-                    className="p-2 hover:bg-muted rounded-lg transition-colors shrink-0"
-                  >
-                    <Copy className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-
-              {/* What to expect */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-foreground">¿Qué sigue?</p>
-                <ul className="text-sm space-y-2 text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    Verificaremos tu pago por {paymentMethod === 'yape' ? 'Yape' : 'Plin'}
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    Recibirás un correo de confirmación a <span className="font-medium text-foreground">{formData.email}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-secondary/20 text-secondary text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    Tu ticket digital será enviado por email
-                  </li>
-                </ul>
-              </div>
-
-              {/* Contact info */}
-              <div className="bg-primary/5 p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <Mail className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-foreground">¿Tienes dudas?</p>
-                    <p className="text-muted-foreground">
-                      Contáctanos a <span className="text-secondary">circulodeestudiosclaudebourgela@gmail.com</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                onClick={onClose}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4"
-              >
-                Entendido
-              </Button>
             </div>
           )}
 
@@ -752,10 +920,19 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {/* Download ticket logic */}}
+                  onClick={() => copyToClipboard(ticketCode)}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Descargar
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      ¡Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copiar Código
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={onClose}

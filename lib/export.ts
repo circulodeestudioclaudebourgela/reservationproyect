@@ -15,7 +15,8 @@ const FIELD_LABELS: Record<keyof Attendee, string> = {
   role: 'Tipo',
   organization: 'Institución',
   status: 'Estado de Pago',
-  culqi_order_id: 'ID de Pago',
+  payment_order_id: 'ID de Transacción',
+  payment_method: 'Método de Pago',
   ticket_code: 'Código de Ticket',
 }
 
@@ -28,9 +29,10 @@ const EXPORT_FIELDS: (keyof Attendee)[] = [
   'role',
   'organization',
   'status',
+  'payment_method',
   'ticket_code',
   'created_at',
-  'culqi_order_id',
+  'payment_order_id',
 ]
 
 /**
@@ -55,6 +57,11 @@ function formatValue(value: unknown, field: keyof Attendee): string {
   
   if (field === 'status') {
     return value === 'paid' ? 'Pagado' : 'Pendiente'
+  }
+
+  if (field === 'payment_method') {
+    const methods: Record<string, string> = { yape: 'Yape', card: 'Tarjeta', manual: 'Manual' }
+    return methods[value as string] || String(value || '')
   }
   
   return String(value)
