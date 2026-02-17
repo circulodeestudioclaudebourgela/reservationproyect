@@ -113,7 +113,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const fee = useMemo(() => calculateFee(basePrice, paymentMethod), [basePrice, paymentMethod])
   const totalPrice = useMemo(() => basePrice + fee, [basePrice, fee])
 
-  // Inicializar MP SDK
+  // Inicializar MP SDKs
   useEffect(() => {
     if (typeof window !== 'undefined' && window.MercadoPago && MP_PUBLIC_KEY) {
       try {
