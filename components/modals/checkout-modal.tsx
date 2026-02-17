@@ -47,8 +47,12 @@ interface MPCardForm {
   getCardFormData: () => {
     token: string
     payment_method_id: string
-    installments: number
+    installments: string
     issuer_id: string
+    cardholderEmail: string
+    amount: string
+    identificationNumber: string
+    identificationType: string
   }
   unmount: () => void
 }
@@ -123,15 +127,19 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
 
   // Inicializar CardForm cuando se muestre el formulario de tarjeta
   useEffect(() => {
-    if (step === 'card-form' && mpRef.current && !cardFormRef.current && attendeeId) {
+    // No necesitamos attendeeId para inicializar CardForm - solo DOM elements + MP SDK
+    if (step !== 'card-form' || !mpRef.current || cardFormRef.current) return
+
+    // Pequeño delay para asegurar que el DOM está listo
+    const timer = setTimeout(() => {
       try {
-        cardFormRef.current = mpRef.current.cardForm({
+        cardFormRef.current = mpRef.current!.cardForm({
           amount: totalPrice.toString(),
           iframe: true,
           form: {
             id: 'form-checkout-card',
             cardNumber: { id: 'form-checkout__cardNumber', placeholder: 'Número de tarjeta' },
-            expirationDate: { id: 'form-checkout__expirationDate', placeholder: 'MM/AA' },
+            expirationDate: { id: 'form-checkout__expirationDate', placeholder: 'MM/YY' },
             securityCode: { id: 'form-checkout__securityCode', placeholder: 'CVV' },
             cardholderName: { id: 'form-checkout__cardholderName', placeholder: 'Titular de la tarjeta' },
             issuer: { id: 'form-checkout__issuer', placeholder: 'Banco emisor' },
@@ -141,38 +149,46 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
             cardholderEmail: { id: 'form-checkout__cardholderEmail', placeholder: 'Email' },
           },
           callbacks: {
-            onFormMounted: (error) => {
+            onFormMounted: (error: unknown) => {
               if (error) {
                 console.error('[Simposio] CardForm mount error:', error)
-                setErrorMessage('Error al cargar el formulario de pago')
                 return
               }
               console.log('[Simposio] CardForm mounted successfully')
             },
-            onSubmit: async (event) => {
+            onSubmit: async (event: Event) => {
               event.preventDefault()
               setIsCardSubmitting(true)
               setErrorMessage('')
-              setStep('processing')
 
               try {
-                const cardFormData = cardFormRef.current.getCardFormData()
+                // Registrar attendee si aún no existe
+                const aid = await ensureAttendeeRegistered()
+                if (!aid) {
+                  setIsCardSubmitting(false)
+                  return
+                }
+
+                setStep('processing')
+
+                const cardFormData = cardFormRef.current!.getCardFormData()
                 
                 console.log('[Simposio] CardForm data:', {
-                  paymentMethodId: cardFormData.paymentMethodId,
-                  issuerId: cardFormData.issuerId,
+                  paymentMethodId: cardFormData.payment_method_id,
+                  issuerId: cardFormData.issuer_id,
                   installments: cardFormData.installments,
+                  token: cardFormData.token ? 'present' : 'missing',
                 })
 
                 // Procesar pago en el servidor
                 const result = await processCardPayment(
-                  attendeeId,
+                  aid,
                   cardFormData.token,
                   totalPrice,
-                  cardFormData.cardholderEmail,
-                  parseInt(cardFormData.installments),
-                  cardFormData.paymentMethodId,
-                  cardFormData.issuerId
+                  cardFormData.cardholderEmail || formData!.email,
+                  Number(cardFormData.installments),
+                  cardFormData.payment_method_id,
+                  cardFormData.issuer_id
                 )
 
                 if (result.success) {
@@ -190,7 +206,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                 setIsCardSubmitting(false)
               }
             },
-            onFetching: (resource) => {
+            onFetching: (resource: string) => {
               console.log('[Simposio] CardForm fetching:', resource)
               return () => {}
             },
@@ -202,11 +218,12 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
         console.error('[Simposio] CardForm init error:', error)
         setErrorMessage('Error al inicializar el formulario de pago')
       }
-    }
+    }, 100)
 
     // Cleanup CardForm cuando se cambie de paso
     return () => {
-      if (cardFormRef.current && step !== 'card-form') {
+      clearTimeout(timer)
+      if (cardFormRef.current) {
         try {
           cardFormRef.current.unmount()
           cardFormRef.current = null
@@ -216,7 +233,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
         }
       }
     }
-  }, [step, totalPrice, attendeeId])
+  }, [step, totalPrice])
 
   // Registrar attendee en BD al avanzar al pago
   const ensureAttendeeRegistered = useCallback(async (): Promise<string | null> => {
@@ -679,7 +696,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   />
                 </div>
 
-                {/* Document Type */}
+                {/* Document Type - Auto-populated by CardForm */}
                 <div className="space-y-2">
                   <Label htmlFor="form-checkout__identificationType" className="text-foreground text-sm font-semibold">
                     Tipo de documento
@@ -687,11 +704,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   <select
                     id="form-checkout__identificationType"
                     className="w-full h-12 px-3 border border-border rounded-md bg-background"
-                  >
-                    <option value="DNI">DNI</option>
-                    <option value="CE">CE - Carnet de Extranjería</option>
-                    <option value="Otro">Otro</option>
-                  </select>
+                  ></select>
                 </div>
 
                 {/* Document Number */}
