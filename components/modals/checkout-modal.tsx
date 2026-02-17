@@ -97,16 +97,11 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const [yapeOtp, setYapeOtp] = useState('')
   const [isYapeSubmitting, setIsYapeSubmitting] = useState(false)
 
-  // Card form state
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpMonth, setCardExpMonth] = useState('')
-  const [cardExpYear, setCardExpYear] = useState('')
-  const [cardSecurityCode, setCardSecurityCode] = useState('')
-  const [cardholderName, setCardholderName] = useState('')
-  const [cardDocNumber, setCardDocNumber] = useState('')
+  // Card form state (CardForm managed)
   const [isCardSubmitting, setIsCardSubmitting] = useState(false)
 
   const mpRef = useRef<MPInstance | null>(null)
+  const cardFormRef = useRef<any>(null)
 
   // Calcular precios dinámicamente
   const basePrice = useMemo(() => getBasePrice(), [])
@@ -125,6 +120,103 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
       }
     }
   }, [])
+
+  // Inicializar CardForm cuando se muestre el formulario de tarjeta
+  useEffect(() => {
+    if (step === 'card-form' && mpRef.current && !cardFormRef.current && attendeeId) {
+      try {
+        cardFormRef.current = mpRef.current.cardForm({
+          amount: totalPrice.toString(),
+          iframe: true,
+          form: {
+            id: 'form-checkout-card',
+            cardNumber: { id: 'form-checkout__cardNumber', placeholder: 'Número de tarjeta' },
+            expirationDate: { id: 'form-checkout__expirationDate', placeholder: 'MM/AA' },
+            securityCode: { id: 'form-checkout__securityCode', placeholder: 'CVV' },
+            cardholderName: { id: 'form-checkout__cardholderName', placeholder: 'Titular de la tarjeta' },
+            issuer: { id: 'form-checkout__issuer', placeholder: 'Banco emisor' },
+            installments: { id: 'form-checkout__installments', placeholder: 'Cuotas' },
+            identificationType: { id: 'form-checkout__identificationType', placeholder: 'Tipo de documento' },
+            identificationNumber: { id: 'form-checkout__identificationNumber', placeholder: 'Número del documento' },
+            cardholderEmail: { id: 'form-checkout__cardholderEmail', placeholder: 'Email' },
+          },
+          callbacks: {
+            onFormMounted: (error) => {
+              if (error) {
+                console.error('[Simposio] CardForm mount error:', error)
+                setErrorMessage('Error al cargar el formulario de pago')
+                return
+              }
+              console.log('[Simposio] CardForm mounted successfully')
+            },
+            onSubmit: async (event) => {
+              event.preventDefault()
+              setIsCardSubmitting(true)
+              setErrorMessage('')
+              setStep('processing')
+
+              try {
+                const cardFormData = cardFormRef.current.getCardFormData()
+                
+                console.log('[Simposio] CardForm data:', {
+                  paymentMethodId: cardFormData.paymentMethodId,
+                  issuerId: cardFormData.issuerId,
+                  installments: cardFormData.installments,
+                })
+
+                // Procesar pago en el servidor
+                const result = await processCardPayment(
+                  attendeeId,
+                  cardFormData.token,
+                  totalPrice,
+                  cardFormData.cardholderEmail,
+                  parseInt(cardFormData.installments),
+                  cardFormData.paymentMethodId,
+                  cardFormData.issuerId
+                )
+
+                if (result.success) {
+                  setTicketCode(result.data.ticket_code)
+                  console.log('[Simposio] Card payment success - Ticket:', result.data.ticket_code)
+                  setStep('success')
+                } else {
+                  throw new Error(result.error)
+                }
+              } catch (error) {
+                console.error('[Simposio] Card payment error:', error)
+                setErrorMessage(error instanceof Error ? error.message : 'Error al procesar pago con tarjeta')
+                setStep('error')
+              } finally {
+                setIsCardSubmitting(false)
+              }
+            },
+            onFetching: (resource) => {
+              console.log('[Simposio] CardForm fetching:', resource)
+              return () => {}
+            },
+          },
+        })
+        
+        console.log('[Simposio] CardForm initialized')
+      } catch (error) {
+        console.error('[Simposio] CardForm init error:', error)
+        setErrorMessage('Error al inicializar el formulario de pago')
+      }
+    }
+
+    // Cleanup CardForm cuando se cambie de paso
+    return () => {
+      if (cardFormRef.current && step !== 'card-form') {
+        try {
+          cardFormRef.current.unmount()
+          cardFormRef.current = null
+          console.log('[Simposio] CardForm unmounted')
+        } catch (error) {
+          console.warn('[Simposio] CardForm unmount error:', error)
+        }
+      }
+    }
+  }, [step, totalPrice, attendeeId])
 
   // Registrar attendee en BD al avanzar al pago
   const ensureAttendeeRegistered = useCallback(async (): Promise<string | null> => {
@@ -198,93 +290,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   // ============================================
   // Handle Card Payment via MercadoPago SDK
   // ============================================
-  const handleCardPayment = async () => {
-    setIsCardSubmitting(true)
-    setErrorMessage('')
-
-    try {
-      const aid = await ensureAttendeeRegistered()
-      if (!aid) return
-
-      setStep('processing')
-
-      if (!mpRef.current) {
-        throw new Error('MercadoPago SDK no disponible. Recarga la página.')
-      }
-
-      // Crear token manualmente vía API de MP
-      const tokenResponse = await fetch('https://api.mercadopago.com/v1/card_tokens?public_key=' + MP_PUBLIC_KEY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          card_number: cardNumber.replace(/\s/g, ''),
-          expiration_month: parseInt(cardExpMonth),
-          expiration_year: parseInt(cardExpYear.length === 2 ? '20' + cardExpYear : cardExpYear),
-          security_code: cardSecurityCode,
-          cardholder: {
-            name: cardholderName,
-            identification: {
-              type: 'DNI',
-              number: cardDocNumber || formData!.dni,
-            },
-          },
-        }),
-      })
-
-      if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.json().catch(() => ({}))
-        console.error('[Simposio] Token creation error:', errorData)
-        throw new Error('Error al tokenizar la tarjeta. Verifica los datos e intenta de nuevo.')
-      }
-
-      const tokenData = await tokenResponse.json()
-
-      if (!tokenData.id) {
-        throw new Error('No se pudo generar el token de la tarjeta.')
-      }
-
-      // Detectar el payment_method_id basándose en el BIN (primeros 6 dígitos)
-      const bin = tokenData.first_six_digits || cardNumber.replace(/\s/g, '').substring(0, 6)
-      
-      // Llamar al endpoint de bin lookup para obtener el payment_method_id
-      const binResponse = await fetch(
-        `https://api.mercadopago.com/v1/payment_methods/search?public_key=${MP_PUBLIC_KEY}&bin=${bin}&marketplace=NONE`
-      )
-      
-      let paymentMethodId = 'visa' // fallback
-      
-      if (binResponse.ok) {
-        const binData = await binResponse.json()
-        if (binData.results && binData.results.length > 0) {
-          paymentMethodId = binData.results[0].id
-        }
-      }
-
-      // Procesar pago en el servidor
-      const result = await processCardPayment(
-        aid,
-        tokenData.id,
-        totalPrice,
-        formData!.email,
-        1,
-        paymentMethodId
-      )
-
-      if (result.success) {
-        setTicketCode(result.data.ticket_code)
-        console.log('[Simposio] Card payment success - Ticket:', result.data.ticket_code)
-        setStep('success')
-      } else {
-        throw new Error(result.error)
-      }
-    } catch (error) {
-      console.error('[Simposio] Card payment error:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'Error al procesar pago con tarjeta')
-      setStep('error')
-    } finally {
-      setIsCardSubmitting(false)
-    }
-  }
+  // CardForm handles payment submission via onSubmit callback in useEffect
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -612,7 +618,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
             </div>
           )}
 
-          {/* Card Payment Form */}
+          {/* Card Payment Form - MercadoPago CardForm */}
           {step === 'card-form' && (
             <div className="p-6 space-y-5">
               {/* Amount */}
@@ -623,141 +629,135 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                 </span>
               </div>
 
-              {/* Card form fields */}
-              <div className="space-y-4">
-                {/* Card Number */}
+              {/* MercadoPago CardForm - Official SDK Integration */}
+              <form id="form-checkout-card" className="space-y-4">
+                {/* Card Number - CardForm replaces this with iframe */}
                 <div className="space-y-2">
-                  <Label htmlFor="card-number" className="text-foreground font-semibold flex items-center gap-2">
+                  <Label className="text-foreground font-semibold flex items-center gap-2">
                     <CreditCard className="w-4 h-4 text-muted-foreground" />
                     Número de Tarjeta
                   </Label>
-                  <Input
-                    id="card-number"
-                    type="text"
-                    placeholder="4509 9535 6623 3704"
-                    maxLength={19}
-                    value={cardNumber}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '')
-                      const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ')
-                      setCardNumber(formatted)
-                    }}
-                    className="bg-background border-border h-12 tracking-wider font-mono"
-                    disabled={isCardSubmitting}
-                  />
+                  <div id="form-checkout__cardNumber" className="h-12 border rounded-md"></div>
                 </div>
 
-                {/* Expiry + CVV */}
-                <div className="grid grid-cols-3 gap-3">
+                {/* Expiration Date & Security Code */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="exp-month" className="text-foreground text-sm font-semibold">Mes</Label>
-                    <Input
-                      id="exp-month"
-                      type="text"
-                      placeholder="12"
-                      maxLength={2}
-                      value={cardExpMonth}
-                      onChange={(e) => setCardExpMonth(e.target.value.replace(/\D/g, ''))}
-                      className="bg-background border-border h-12 text-center font-mono"
-                      disabled={isCardSubmitting}
-                    />
+                    <Label className="text-foreground text-sm font-semibold">Vencimiento (MM/YYYY)</Label>
+                    <div id="form-checkout__expirationDate" className="h-12 border rounded-md"></div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="exp-year" className="text-foreground text-sm font-semibold">Año</Label>
-                    <Input
-                      id="exp-year"
-                      type="text"
-                      placeholder="2030"
-                      maxLength={4}
-                      value={cardExpYear}
-                      onChange={(e) => setCardExpYear(e.target.value.replace(/\D/g, ''))}
-                      className="bg-background border-border h-12 text-center font-mono"
-                      disabled={isCardSubmitting}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cvv" className="text-foreground text-sm font-semibold">CVV</Label>
-                    <Input
-                      id="cvv"
-                      type="text"
-                      placeholder="123"
-                      maxLength={4}
-                      value={cardSecurityCode}
-                      onChange={(e) => setCardSecurityCode(e.target.value.replace(/\D/g, ''))}
-                      className="bg-background border-border h-12 text-center font-mono"
-                      disabled={isCardSubmitting}
-                    />
+                    <Label className="text-foreground text-sm font-semibold">CVV</Label>
+                    <div id="form-checkout__securityCode" className="h-12 border rounded-md"></div>
                   </div>
                 </div>
 
                 {/* Cardholder Name */}
                 <div className="space-y-2">
-                  <Label htmlFor="cardholder-name" className="text-foreground text-sm font-semibold">
-                    Nombre del titular
+                  <Label htmlFor="form-checkout__cardholderName" className="text-foreground text-sm font-semibold">
+                    Nombre del titular (como aparece en la tarjeta)
                   </Label>
-                  <Input
-                    id="cardholder-name"
+                  <input
                     type="text"
-                    placeholder="Como aparece en la tarjeta"
-                    value={cardholderName}
-                    onChange={(e) => setCardholderName(e.target.value.toUpperCase())}
-                    className="bg-background border-border h-12"
-                    disabled={isCardSubmitting}
+                    id="form-checkout__cardholderName"
+                    placeholder="JUAN PEREZ"
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background"
                   />
                 </div>
 
-                {/* DNI */}
+                {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="card-dni" className="text-foreground text-sm font-semibold">
-                    DNI del titular
+                  <Label htmlFor="form-checkout__cardholderEmail" className="text-foreground text-sm font-semibold">
+                    Email del titular
                   </Label>
-                  <Input
-                    id="card-dni"
+                  <input
+                    type="email"
+                    id="form-checkout__cardholderEmail"
+                    placeholder="correo@ejemplo.com"
+                    defaultValue={formData?.email || ''}
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background"
+                  />
+                </div>
+
+                {/* Document Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="form-checkout__identificationType" className="text-foreground text-sm font-semibold">
+                    Tipo de documento
+                  </Label>
+                  <select
+                    id="form-checkout__identificationType"
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background"
+                  >
+                    <option value="DNI">DNI</option>
+                    <option value="CE">CE - Carnet de Extranjería</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                {/* Document Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="form-checkout__identificationNumber" className="text-foreground text-sm font-semibold">
+                    Número de documento
+                  </Label>
+                  <input
                     type="text"
-                    placeholder={formData.dni}
-                    maxLength={8}
-                    value={cardDocNumber}
-                    onChange={(e) => setCardDocNumber(e.target.value.replace(/\D/g, ''))}
-                    className="bg-background border-border h-12 font-mono"
-                    disabled={isCardSubmitting}
+                    id="form-checkout__identificationNumber"
+                    placeholder={formData?.dni || '12345678'}
+                    defaultValue={formData?.dni || ''}
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background font-mono"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Si el titular es otro, ingresa su DNI. Si no, se usará tu DNI ({formData.dni}).
+                    Si el titular es otro, ingresa su documento. Si no, usa tu DNI.
                   </p>
                 </div>
-              </div>
 
-              {/* Security note */}
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                <Lock className="w-4 h-4 shrink-0" />
-                <span>Tus datos son encriptados y procesados de forma segura por MercadoPago. No almacenamos información de tu tarjeta.</span>
-              </div>
+                {/* Issuer - Auto-populated by CardForm */}
+                <div className="space-y-2">
+                  <Label htmlFor="form-checkout__issuer" className="text-foreground text-sm font-semibold">
+                    Banco emisor
+                  </Label>
+                  <select
+                    id="form-checkout__issuer"
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background"
+                  ></select>
+                </div>
 
-              {/* Submit button */}
-              <Button
-                onClick={handleCardPayment}
-                disabled={
-                  cardNumber.replace(/\s/g, '').length < 13 ||
-                  cardExpMonth.length < 1 ||
-                  cardExpYear.length < 2 ||
-                  cardSecurityCode.length < 3 ||
-                  cardholderName.length < 3 ||
-                  isCardSubmitting
-                }
-                className="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-6 text-lg text-white disabled:opacity-50"
-              >
-                {isCardSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Procesando pago...
-                  </span>
-                ) : (
-                  <>
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Pagar {CURRENCY} {(basePrice * 1.05).toFixed(2)}
-                  </>
-                )}
-              </Button>
+                {/* Installments - Auto-populated by CardForm */}
+                <div className="space-y-2">
+                  <Label htmlFor="form-checkout__installments" className="text-foreground text-sm font-semibold">
+                    Cuotas
+                  </Label>
+                  <select
+                    id="form-checkout__installments"
+                    className="w-full h-12 px-3 border border-border rounded-md bg-background"
+                  ></select>
+                </div>
+
+                {/* Security note */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <Lock className="w-4 h-4 shrink-0" />
+                  <span>Tus datos son encriptados y procesados de forma segura por MercadoPago. No almacenamos información de tu tarjeta.</span>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isCardSubmitting}
+                  className="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-6 text-lg text-white disabled:opacity-50 rounded-md flex items-center justify-center"
+                >
+                  {isCardSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Procesando pago...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Pagar {CURRENCY} {(basePrice * 1.05).toFixed(2)}
+                    </span>
+                  )}
+                </button>
+              </form>
             </div>
           )}
 

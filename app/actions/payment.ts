@@ -86,7 +86,8 @@ export async function processCardPayment(
   amount: number,
   payerEmail: string,
   installments: number,
-  paymentMethodId: string
+  paymentMethodId: string,
+  issuerId: string
 ): Promise<PaymentResult> {
   try {
     const idempotencyKey = `card_${attendeeId}_${Date.now()}`
@@ -98,6 +99,7 @@ export async function processCardPayment(
       payerEmail,
       installments,
       paymentMethodId,
+      issuerId,
       idempotencyKey,
     })
 

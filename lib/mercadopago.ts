@@ -33,6 +33,7 @@ export interface CreateCardPaymentParams {
   payerEmail: string
   installments: number
   paymentMethodId: string
+  issuerId: string
   idempotencyKey: string
 }
 
@@ -100,6 +101,7 @@ export async function createCardPayment(params: CreateCardPaymentParams): Promis
         description: params.description,
         installments: params.installments,
         payment_method_id: params.paymentMethodId,
+        issuer_id: parseInt(params.issuerId),
         payer: {
           email: params.payerEmail,
         },
