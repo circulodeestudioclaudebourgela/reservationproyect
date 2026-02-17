@@ -73,7 +73,7 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="relative container mx-auto px-4 py-24 md:py-32">
+      <div className="relative container mx-auto px-4 pt-24 md:pt-32 pb-44 md:pb-52">
         <div className="max-w-4xl mx-auto text-center">
           {/* Organization badge */}
           <div className="mb-8">
@@ -193,8 +193,13 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Bottom gradient fade - optimized for Overlapping Content pattern */}
-      <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-background/40 via-background/20 to-transparent pointer-events-none" />
+      {/* Mist Transition - fades hero into background color */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 z-[1] h-40 md:h-56 pointer-events-none"
+        style={{ 
+          background: 'linear-gradient(to bottom, transparent 0%, hsl(210 40% 98% / 0.6) 40%, hsl(210 40% 98% / 0.9) 70%, hsl(210 40% 98%) 100%)' 
+        }} 
+      />
     </section>
   )
 }
