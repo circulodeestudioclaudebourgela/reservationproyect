@@ -123,17 +123,19 @@ const sponsors = [
 export default function InfoSections() {
   return (
     <div className="space-y-0">
-      {/* Sponsors Marquee - Bridge section */}
-      <section className="relative -mt-20 pt-8 pb-12 bg-background">
-        <div className="container mx-auto px-4 mb-6">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Con el respaldo de
-          </p>
-        </div>
-        <div className="relative overflow-hidden">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background to-transparent z-10" />
+      {/* Sponsors Marquee - Bridge section with Overlapping Content Pattern */}
+      <section className="relative -mt-32 z-20">
+        {/* Elevated Card Container - Visual Bridge */}
+        <div className="container mx-auto px-4">
+          <div className="bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 overflow-hidden">
+            <div className="pt-8 pb-6">
+              <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                Con el respaldo de
+              </p>
+              <div className="relative overflow-hidden">
+                {/* Fade edges */}
+                <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-r from-background/95 to-transparent z-10" />
+                <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 bg-gradient-to-l from-background/95 to-transparent z-10" />
           
           <div className="animate-marquee flex items-center gap-12 md:gap-16 whitespace-nowrap w-max">
             {/* Duplicate array for seamless loop */}
@@ -160,6 +162,9 @@ export default function InfoSections() {
                 <span className="text-sm font-medium">{sponsor.name}</span>
               </div>
             ))}
+          </div>
+        </div>
+            </div>
           </div>
         </div>
       </section>

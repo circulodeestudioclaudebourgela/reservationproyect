@@ -193,8 +193,8 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Bottom gradient fade - extended for smooth transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-background via-background/60 to-transparent" />
+      {/* Bottom gradient fade - optimized for Overlapping Content pattern */}
+      <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-background/40 via-background/20 to-transparent pointer-events-none" />
     </section>
   )
 }
