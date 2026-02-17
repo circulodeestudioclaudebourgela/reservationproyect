@@ -2,7 +2,7 @@
 
 import { createYapePayment, createCardPayment, getPaymentStatus } from '@/lib/mercadopago'
 import { supabase, type Attendee } from '@/lib/supabase'
-import { sendEmail, generatePaymentConfirmationEmail } from '@/lib/email'
+import { sendEmail, generatePaymentConfirmationEmail, generatePaymentRejectedEmail } from '@/lib/email'
 
 // ============================================
 // Tipos
@@ -34,6 +34,23 @@ export async function processYapePayment(
     })
 
     if (!result.success) {
+      // Intento de obtener datos del attendee para enviar email de rechazo
+      const { data: attendeeData } = await supabase
+        .from('attendees')
+        .select('*')
+        .eq('id', attendeeId)
+        .single()
+      
+      if (attendeeData) {
+        const attendee = attendeeData as Attendee
+        const errorMsg = getPaymentErrorMessage(result.statusDetail || result.error || '')
+        
+        // Enviar email de pago rechazado (no bloquear)
+        sendPaymentRejectionEmail(attendee, amount, errorMsg).catch(err => {
+          console.error('[Payment] Yape rejection email error:', err)
+        })
+      }
+      
       return {
         success: false,
         error: getPaymentErrorMessage(result.statusDetail || result.error || ''),
@@ -60,10 +77,12 @@ export async function processYapePayment(
 
     const attendee = data as Attendee
 
-    // Enviar email de confirmación (no bloquear el flujo)
-    sendConfirmationEmail(attendee, amount).catch(err => {
-      console.error('[Payment] Email send error:', err)
+    // Enviar email de confirmación (async, no bloquear el flujo)
+    sendConfirmationEmail(attendee, amount, 'yape').catch(err => {
+      console.error('[Payment] Yape confirmation email error:', err)
     })
+
+    console.log('[Payment] Yape payment successful - Ticket:', attendee.ticket_code)
 
     return {
       success: true,
@@ -104,6 +123,23 @@ export async function processCardPayment(
     })
 
     if (!result.success) {
+      // Intento de obtener datos del attendee para enviar email de rechazo
+      const { data: attendeeData } = await supabase
+        .from('attendees')
+        .select('*')
+        .eq('id', attendeeId)
+        .single()
+      
+      if (attendeeData) {
+        const attendee = attendeeData as Attendee
+        const errorMsg = getPaymentErrorMessage(result.statusDetail || result.error || '')
+        
+        // Enviar email de pago rechazado (no bloquear)
+        sendPaymentRejectionEmail(attendee, amount, errorMsg).catch(err => {
+          console.error('[Payment] Card rejection email error:', err)
+        })
+      }
+      
       return {
         success: false,
         error: getPaymentErrorMessage(result.statusDetail || result.error || ''),
@@ -130,10 +166,12 @@ export async function processCardPayment(
 
     const attendee = data as Attendee
 
-    // Enviar email de confirmación (no bloquear el flujo)
-    sendConfirmationEmail(attendee, amount).catch(err => {
-      console.error('[Payment] Email send error:', err)
+    // Enviar email de confirmación (async, no bloquear el flujo)
+    sendConfirmationEmail(attendee, amount, 'tarjeta').catch(err => {
+      console.error('[Payment] Card confirmation email error:', err)
     })
+
+    console.log('[Payment] Card payment successful - Ticket:', attendee.ticket_code)
 
     return {
       success: true,
@@ -171,28 +209,70 @@ export async function verifyPaymentStatus(paymentId: string): Promise<{
 }
 
 // ============================================
-// Helpers
+// Funciones auxiliares de email
 // ============================================
 
-async function sendConfirmationEmail(attendee: Attendee, amount: number) {
-  const emailHtml = generatePaymentConfirmationEmail({
-    fullName: attendee.full_name,
-    email: attendee.email,
-    dni: attendee.dni,
-    phone: attendee.phone,
-    role: attendee.role,
-    organization: attendee.organization || undefined,
-    ticketCode: attendee.ticket_code,
-    amount,
-  })
+async function sendConfirmationEmail(attendee: Attendee, amount: number, paymentMethod: string) {
+  try {
+    const emailHtml = generatePaymentConfirmationEmail({
+      fullName: attendee.full_name,
+      email: attendee.email,
+      dni: attendee.dni,
+      phone: attendee.phone,
+      role: attendee.role,
+      organization: attendee.organization || undefined,
+      ticketCode: attendee.ticket_code,
+      amount,
+    })
 
-  await sendEmail(
-    attendee.email,
-    '✅ ¡Tu registro al II Simposio Veterinario está confirmado!',
-    emailHtml
-  )
+    const result = await sendEmail(
+      attendee.email,
+      '✓ Tu registro al II Simposio Veterinario está confirmado',
+      emailHtml
+    )
 
-  console.log('[Payment] Confirmation email sent to:', attendee.email)
+    if (result.success) {
+      console.log('[Payment] Confirmation email sent to:', attendee.email)
+    } else {
+      console.error('[Payment] Email send failed:',result.error)
+    }
+  } catch (error) {
+    console.error('[Payment] sendConfirmationEmail error:', error)
+    throw error
+  }
+}
+
+async function sendPaymentRejectionEmail(attendee: Attendee, amount: number, reason: string) {
+  try {
+    const emailHtml = generatePaymentRejectedEmail(
+      {
+        fullName: attendee.full_name,
+        email: attendee.email,
+        dni: attendee.dni,
+        phone: attendee.phone,
+        role: attendee.role,
+        organization: attendee.organization || undefined,
+        ticketCode: attendee.ticket_code,
+        amount,
+      },
+      reason
+    )
+
+    const result = await sendEmail(
+      attendee.email,
+      'Problema con tu pago - II Simposio Veterinario',
+      emailHtml
+    )
+
+    if (result.success) {
+      console.log('[Payment] Rejection email sent to:', attendee.email)
+    } else {
+      console.error('[Payment] Rejection email send failed:', result.error)
+    }
+  } catch (error) {
+    console.error('[Payment] sendPaymentRejectionEmail error:', error)
+    throw error
+  }
 }
 
 function getPaymentErrorMessage(statusDetail: string): string {
