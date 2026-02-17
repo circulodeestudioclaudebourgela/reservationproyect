@@ -322,10 +322,38 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   }
 
   const handleBack = () => {
+    // Reset payment method y form states al volver
+    if (step === 'yape-form' || step === 'card-form') {
+      setPaymentMethod(null)
+      setYapePhone('')
+      setYapeOtp('')
+    }
+    
     if (step === 'payment-select') setStep('summary')
     else if (step === 'yape-form') setStep('payment-select')
     else if (step === 'card-form') setStep('payment-select')
     else setStep('summary')
+  }
+  
+  const handleClose = () => {
+    // Prevenir cierre durante procesamiento de pago
+    if (step === 'processing') {
+      alert('⚠️ Espera a que termine el procesamiento del pago. No cierres esta ventana.')
+      return
+    }
+    
+    // Confirmar si hay un pago en progreso
+    if (step === 'yape-form' && (yapePhone || yapeOtp)) {
+      const confirm = window.confirm('¿Seguro que deseas cancelar? Perderás los datos ingresados.')
+      if (!confirm) return
+    }
+    
+    if (step === 'card-form') {
+      const confirm = window.confirm('¿Seguro que deseas cancelar? Perderás los datos ingresados.')
+      if (!confirm) return
+    }
+    
+    onClose()
   }
 
   if (!formData) return null
@@ -374,9 +402,10 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Cerrar"
+              disabled={step === 'processing'}
             >
               <X className="w-5 h-5" />
             </button>
@@ -816,7 +845,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   Intentar con otro método
                 </Button>
                 <Button
-                  onClick={onClose}
+                  onClick={handleClose}
                   variant="outline"
                   className="w-full"
                 >
@@ -966,7 +995,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   )}
                 </Button>
                 <Button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Cerrar

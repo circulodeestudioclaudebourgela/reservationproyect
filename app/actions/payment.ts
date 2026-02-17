@@ -23,6 +23,17 @@ export async function processYapePayment(
   payerEmail: string
 ): Promise<PaymentResult> {
   try {
+    // Validar precio actual vs precio enviado
+    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const currentPrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+    
+    if (Math.abs(amount - currentPrice) > 0.01) {
+      return {
+        success: false,
+        error: `El precio cambió a S/ ${currentPrice.toFixed(2)}. Por favor actualiza la página e intenta nuevamente.`
+      }
+    }
+    
     const idempotencyKey = `yape_${attendeeId}_${Date.now()}`
 
     const result = await createYapePayment({
@@ -110,8 +121,17 @@ export async function processCardPayment(
   paymentMethodId: string,
   issuerId: string
 ): Promise<PaymentResult> {
-  try {
-    const idempotencyKey = `card_${attendeeId}_${Date.now()}`
+  try {    // Validar precio actual vs precio enviado
+    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const currentPrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+    
+    if (Math.abs(amount - currentPrice) > 0.01) {
+      return {
+        success: false,
+        error: `El precio cambió a S/ ${currentPrice.toFixed(2)}. Por favor actualiza la página e intenta nuevamente.`
+      }
+    }
+        const idempotencyKey = `card_${attendeeId}_${Date.now()}`
 
     const result = await createCardPayment({
       token,

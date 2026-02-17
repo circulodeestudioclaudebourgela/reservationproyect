@@ -22,28 +22,50 @@ export async function registerAttendee(
     // Check if DNI already exists
     const { data: existingByDni } = await supabase
       .from('attendees')
-      .select('id')
+      .select('*')
       .eq('dni', validatedData.dni)
       .single()
 
     if (existingByDni) {
-      return { 
-        success: false, 
-        error: 'Ya existe un registro con este DNI' 
+      const attendee = existingByDni as Attendee
+      
+      // Si ya pagó, mostrar mensaje específico
+      if (attendee.status === 'paid') {
+        return { 
+          success: false, 
+          error: `¡Ya estás registrado! Tu código de ticket es ${attendee.ticket_code}. Revisa tu correo o contáctanos si necesitas ayuda.` 
+        }
+      }
+      
+      // Si está pendiente, permitir continuar con el pago
+      return {
+        success: true,
+        data: attendee
       }
     }
 
     // Check if email already exists
     const { data: existingByEmail } = await supabase
       .from('attendees')
-      .select('id')
+      .select('*')
       .eq('email', validatedData.email)
       .single()
 
     if (existingByEmail) {
-      return { 
-        success: false, 
-        error: 'Ya existe un registro con este correo electrónico' 
+      const attendee = existingByEmail as Attendee
+      
+      // Si ya pagó, mostrar mensaje específico
+      if (attendee.status === 'paid') {
+        return { 
+          success: false, 
+          error: `¡Ya estás registrado! Tu código de ticket es ${attendee.ticket_code}. Revisa tu correo o contáctanos si necesitas ayuda.` 
+        }
+      }
+      
+      // Si está pendiente, permitir continuar con el pago
+      return {
+        success: true,
+        data: attendee
       }
     }
 
