@@ -243,6 +243,23 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
         throw new Error('No se pudo generar el token de la tarjeta.')
       }
 
+      // Detectar el payment_method_id basándose en el BIN (primeros 6 dígitos)
+      const bin = tokenData.first_six_digits || cardNumber.replace(/\s/g, '').substring(0, 6)
+      
+      // Llamar al endpoint de bin lookup para obtener el payment_method_id
+      const binResponse = await fetch(
+        `https://api.mercadopago.com/v1/payment_methods/search?public_key=${MP_PUBLIC_KEY}&bin=${bin}&marketplace=NONE`
+      )
+      
+      let paymentMethodId = 'visa' // fallback
+      
+      if (binResponse.ok) {
+        const binData = await binResponse.json()
+        if (binData.results && binData.results.length > 0) {
+          paymentMethodId = binData.results[0].id
+        }
+      }
+
       // Procesar pago en el servidor
       const result = await processCardPayment(
         aid,
@@ -250,7 +267,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
         totalPrice,
         formData!.email,
         1,
-        tokenData.payment_method_id || 'visa'
+        paymentMethodId
       )
 
       if (result.success) {
