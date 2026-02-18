@@ -66,14 +66,14 @@ type PaymentMethod = 'card' | 'yape' | null
 type CheckoutStep = 'summary' | 'payment-select' | 'yape-form' | 'card-form' | 'processing' | 'success' | 'error'
 
 const CURRENCY = 'S/'
-const EARLY_BIRD_PRICE = 2.00  // TEMPORAL: Precio de prueba producción
-const REGULAR_PRICE = 2.00      // TEMPORAL: Precio de prueba producción
+const EARLY_BIRD_PRICE = 250.00
+const REGULAR_PRICE = 350.00
 const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
 
 // Comisiones de transacción
 const FEES = {
   card: 0.05,   // Tarjeta: 5%
-  yape: 0,      // Yape: sin comisión
+  yape: 0.05,   // Yape: 5% (MercadoPago cobra comisión)
 }
 
 const getBasePrice = () => {
@@ -81,7 +81,8 @@ const getBasePrice = () => {
 }
 
 const calculateFee = (basePrice: number, method: PaymentMethod) => {
-  if (!method || method === 'yape') return 0
+  if (!method) return 0
+  if (method === 'yape') return basePrice * FEES.yape
   if (method === 'card') return basePrice * FEES.card
   return 0
 }
@@ -284,7 +285,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
       const result = await processYapePayment(
         aid,
         yapeToken.id,
-        basePrice,
+        totalPrice,
         formData!.email
       )
 
@@ -507,7 +508,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
 
               {/* Payment options */}
               <div className="space-y-3">
-                {/* Yape via MercadoPago - Sin comisión */}
+                {/* Yape via MercadoPago - Comisión 5% */}
                 <button
                   onClick={() => {
                     setPaymentMethod('yape')
@@ -522,10 +523,10 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                     <p className="font-semibold text-foreground group-hover:text-secondary transition-colors">
                       Yape
                     </p>
-                    <p className="text-sm text-muted-foreground">Sin comisión • {CURRENCY} {basePrice.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">+5% comisión • Total: {CURRENCY} {(basePrice * 1.05).toFixed(2)}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Sin fee</span>
+                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">5%</span>
                   </div>
                 </button>
 
@@ -556,9 +557,9 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
               <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Yape:</strong> Sin comisión, pagas {CURRENCY} {basePrice.toFixed(2)} • 
-                  <strong> Tarjeta:</strong> +5% de comisión por uso de plataforma y pasarela de pagos 
-                  (Total: {CURRENCY} {(basePrice * 1.05).toFixed(2)}). 
+                  Ambos métodos incluyen 5% de comisión por uso de la plataforma y procesamiento de pagos. 
+                  <strong>Precio base:</strong> {CURRENCY} {basePrice.toFixed(2)} • 
+                  <strong> Total a pagar:</strong> {CURRENCY} {(basePrice * 1.05).toFixed(2)}. 
                   Todos los pagos son procesados de forma segura por MercadoPago.
                 </span>
               </div>
@@ -574,6 +575,24 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
           {/* Yape Payment Form */}
           {step === 'yape-form' && (
             <div className="p-6 space-y-6">
+              {/* Price Breakdown */}
+              <div className="bg-primary/5 p-4 rounded-xl space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Precio base:</span>
+                  <span className="font-medium text-foreground">{CURRENCY} {basePrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Comisión (5%):</span>
+                  <span className="font-medium text-foreground">{CURRENCY} {fee.toFixed(2)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between items-center">
+                  <span className="text-foreground font-semibold">Total a pagar:</span>
+                  <span className="font-serif text-2xl font-bold text-secondary">
+                    {CURRENCY} {totalPrice.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="bg-muted/50 p-4 rounded-xl space-y-3">
                 <h4 className="font-semibold text-foreground flex items-center gap-2">
@@ -659,7 +678,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                 ) : (
                   <>
                     <Smartphone className="w-5 h-5 mr-2" />
-                    Pagar {CURRENCY} {basePrice.toFixed(2)} con Yape
+                    Pagar {CURRENCY} {totalPrice.toFixed(2)} con Yape
                   </>
                 )}
               </Button>

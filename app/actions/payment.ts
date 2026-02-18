@@ -24,14 +24,15 @@ export async function processYapePayment(
 ): Promise<PaymentResult> {
   try {
     // Validar precio actual vs precio enviado
-    // Para Yape no hay comisión, se paga el precio base
+    // Para Yape también se cobra comisión del 5%
     const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
-    const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 2.00 : 2.00  // TEMPORAL: Precio de prueba producción
+    const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+    const expectedAmount = basePrice * 1.05  // Precio base + 5% comisión
     
-    if (Math.abs(amount - basePrice) > 0.01) {
+    if (Math.abs(amount - expectedAmount) > 0.01) {
       return {
         success: false,
-        error: `El precio cambió a S/ ${basePrice.toFixed(2)}. Por favor actualiza la página e intenta nuevamente.`
+        error: `El precio cambió a S/ ${basePrice.toFixed(2)} (+ 5% comisión = S/ ${expectedAmount.toFixed(2)}). Por favor actualiza la página e intenta nuevamente.`
       }
     }
     
@@ -126,7 +127,7 @@ export async function processCardPayment(
     // Validar precio actual vs precio enviado
     // Para tarjeta se cobra el precio base + 5% de comisión
     const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
-    const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 2.00 : 2.00  // TEMPORAL: Precio de prueba producción
+    const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
     const expectedAmount = basePrice * 1.05  // Precio base + 5% comisión
     
     if (Math.abs(amount - expectedAmount) > 0.01) {

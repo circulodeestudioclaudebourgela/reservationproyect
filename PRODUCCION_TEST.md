@@ -1,8 +1,8 @@
-# 🚀 MODO PRODUCCIÓN - PRUEBA ACTIVA
+# 🚀 MODO PRODUCCIÓN - CONFIGURACIÓN ACTUALIZADA
 
-## ⚠️ IMPORTANTE: CONFIGURACIÓN TEMPORAL
+## ✅ CONFIGURACIÓN ACTUAL
 
-**Status**: Los precios están configurados a **S/ 2.00** para prueba inicial de producción
+**Status**: Precios configurados a **S/ 250.00** (Early Bird) con 5% de comisión en ambos métodos
 
 ### Credenciales MercadoPago - PRODUCCIÓN
 
@@ -13,46 +13,52 @@ Client ID: 6164578251720462
 Client Secret: WXxJlMOUC6ZY9qkV6Mu3fRKP02ItETR4
 ```
 
-### Cambios realizados (17 Feb 2026)
+### Precios Actuales (17 Feb 2026)
 
-✅ Credenciales actualizadas en `.env`
-✅ Precios cambiados temporalmente de S/ 250.00 → **S/ 2.00**
+✅ **Yape**: S/ 250.00 + 5% comisión = **S/ 262.50**
+✅ **Tarjeta**: S/ 250.00 + 5% comisión = **S/ 262.50**
 
-### Archivos modificados con precios de prueba:
+**Nota**: Ambos métodos de pago ahora cobran 5% de comisión por uso de plataforma y procesamiento de pagos a través de MercadoPago.
 
-1. `app/actions/payment.ts` - Líneas 29, 129
-2. `app/actions/register.ts` - Línea 243
-3. `app/actions/email.ts` - Líneas 12-13
-4. `app/api/webhooks/mercadopago/route.ts` - Línea 73
-5. `components/modals/checkout-modal.tsx` - Líneas 69-70
-6. `components/forms/registration-form.tsx` - Líneas 25-26
-7. `components/admin/admin-dashboard.tsx` - Líneas 31-32
-8. `components/admin/attendee-details-modal.tsx` - Líneas 23-24
+### Cambios realizados
 
-### 🔄 Para volver a precios reales (S/ 250.00 / S/ 350.00)
+✅ Credenciales de producción actualizadas en `.env`
+✅ Precios revertidos a S/ 250.00 (Early Bird) / S/ 350.00 (Regular)
+✅ Comisión del 5% aplicada a ambos métodos (Yape y Tarjeta)
+✅ UI actualizada para mostrar desglose de comisiones en ambos métodos
 
-Buscar en todos los archivos: `// TEMPORAL: Precio de prueba producción`
+### Archivos con configuración de precios:
 
-Y reemplazar:
+Los siguientes archivos tienen los precios configurados (todos en S/ 250.00 / S/ 350.00):
+
+1. `app/actions/payment.ts` - Validación de precios con comisión del 5% para ambos métodos
+2. `app/actions/register.ts` - Precio base para emails
+3. `app/actions/email.ts` - Precio base para templates
+4. `app/api/webhooks/mercadopago/route.ts` - Precio base para webhooks
+5. `components/modals/checkout-modal.tsx` - Precios y comisiones en UI
+6. `components/forms/registration-form.tsx` - Precio mostrado en formulario
+7. `components/admin/admin-dashboard.tsx` - Precio en dashboard admin
+8. `components/admin/attendee-details-modal.tsx` - Precio en modal de detalles
+
+### 🔄 Para cambiar precios en el futuro
+
+Buscar las constantes en cada archivo:
 ```typescript
-// DE:
-const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 2.00 : 2.00  // TEMPORAL: Precio de prueba producción
-
-// A:
-const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+const EARLY_BIRD_PRICE = 250.00
+const REGULAR_PRICE = 350.00
+const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
 ```
 
 ### Checklist de prueba en producción
 
 - [ ] Registrar un asistente real
-- [ ] Probar pago con tarjeta real (S/ 2.10 con comisión)
-- [ ] Probar pago con Yape (S/ 2.00 sin comisión)
+- [ ] Probar pago con tarjeta real (S/ 262.50 con comisión incluida)
+- [ ] Probar pago con Yape (S/ 262.50 con comisión incluida)
 - [ ] Verificar que el pago aparece en MercadoPago producción
 - [ ] Verificar que se actualiza en la BD
 - [ ] Verificar que llega el email de confirmación
 - [ ] Verificar webhook funciona correctamente
-- [ ] Reembolsar los pagos de prueba desde panel de MP
-- [ ] **RESTAURAR PRECIOS REALES** después de pruebas exitosas
+- [ ] Reembolsar los pagos de prueba desde panel de MP (si se hicieron pruebas a precios bajos)
 
 ### URLs importantes
 
@@ -62,5 +68,15 @@ const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
 ### Notas de seguridad
 
 ⚠️ **NO OLVIDAR**: Después de la prueba exitosa, volver a los precios reales antes del lanzamiento oficial.
+Las credenciales de producción están en el `.env` y deben estar actualizadas en las variables de entorno de Vercel.
 
-⚠️ Las credenciales de producción están en el `.env` y en las variables de entorno de Vercel.
+### Estructura de comisiones
+
+**MercadoPago cobra 5% por todos los pagos procesados**:
+- **Yape**: 5% de comisión
+- **Tarjeta de crédito/débito**: 5% de comisión
+
+El precio final que paga el usuario incluye:
+- Precio base del evento: S/ 250.00 (Early Bird) o S/ 350.00 (Regular)
+- Comisión de procesamiento (5%): S/ 12.50 o S/ 17.50
+- **Total**: S/ 262.50 o S/ 367.50
