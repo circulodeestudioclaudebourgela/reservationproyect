@@ -556,8 +556,10 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
               <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  Las comisiones de tarjeta corresponden a los costos de procesamiento.
-                  Yape no tiene comisión adicional. Todos los pagos son procesados de forma segura por MercadoPago.
+                  <strong>Yape:</strong> Sin comisión, pagas {CURRENCY} {basePrice.toFixed(2)} • 
+                  <strong> Tarjeta:</strong> +5% de comisión por uso de plataforma y pasarela de pagos 
+                  (Total: {CURRENCY} {(basePrice * 1.05).toFixed(2)}). 
+                  Todos los pagos son procesados de forma segura por MercadoPago.
                 </span>
               </div>
 
@@ -667,12 +669,22 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
           {/* Card Payment Form - MercadoPago CardForm */}
           {step === 'card-form' && (
             <div className="p-6 space-y-5">
-              {/* Amount */}
-              <div className="bg-primary/5 p-4 rounded-xl flex justify-between items-center">
-                <span className="text-foreground font-medium">Total con comisión:</span>
-                <span className="font-serif text-2xl font-bold text-secondary">
-                  {CURRENCY} {(basePrice * 1.05).toFixed(2)}
-                </span>
+              {/* Price Breakdown */}
+              <div className="bg-primary/5 p-4 rounded-xl space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Precio base:</span>
+                  <span className="font-medium text-foreground">{CURRENCY} {basePrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Comisión (5%):</span>
+                  <span className="font-medium text-foreground">{CURRENCY} {fee.toFixed(2)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between items-center">
+                  <span className="text-foreground font-semibold">Total a pagar:</span>
+                  <span className="font-serif text-2xl font-bold text-secondary">
+                    {CURRENCY} {totalPrice.toFixed(2)}
+                  </span>
+                </div>
               </div>
 
               {/* MercadoPago CardForm - Official SDK Integration */}
@@ -795,7 +807,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                   ) : (
                     <span className="flex items-center">
                       <CreditCard className="w-5 h-5 mr-2" />
-                      Pagar {CURRENCY} {(basePrice * 1.05).toFixed(2)}
+                      Pagar {CURRENCY} {totalPrice.toFixed(2)}
                     </span>
                   )}
                 </button>
