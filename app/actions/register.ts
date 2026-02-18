@@ -240,7 +240,7 @@ export async function markAsPaid(attendeeId: string): Promise<RegisterResult> {
     // Enviar email de confirmación al marcar como pagado
     try {
       const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
-      const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+      const amount = new Date() < EARLY_BIRD_DEADLINE ? 2.00 : 2.00  // TEMPORAL: Precio de prueba producción
 
       const { generatePaymentConfirmationEmail } = await import('@/lib/email')
       const emailHtml = generatePaymentConfirmationEmail({

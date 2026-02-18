@@ -28,8 +28,8 @@ import { exportToCSV, exportToExcel } from '@/lib/export'
 import { getAllAttendees, markAsPaid, deleteAttendee } from '@/app/actions/register'
 
 // Precios dinámicos
-const EARLY_BIRD_PRICE = 250.00
-const REGULAR_PRICE = 350.00
+const EARLY_BIRD_PRICE = 2.00   // TEMPORAL: Precio de prueba producción
+const REGULAR_PRICE = 2.00      // TEMPORAL: Precio de prueba producción
 const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
 
 // Calcular precio actual
