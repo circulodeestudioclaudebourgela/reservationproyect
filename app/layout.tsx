@@ -20,13 +20,14 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'II Simposio Veterinario Internacional 2026 | Círculo de Estudios Claude Bourgelat',
-  description: 'Únete al evento veterinario del año. 05 y 06 de Junio 2026 en Hotel Costa del Sol - El Golf, Trujillo. Ponencias magistrales, talleres especializados y networking.',
+  description: 'Cirugía abdominal, ultrasonografía diagnóstica, técnicas mínimamente invasivas e investigación clínica para animales de compañía. 05 y 06 de Junio 2026 en Hotel Costa del Sol - Urb. El Golf, Trujillo.',
   keywords: ['simposio veterinario', 'veterinaria', 'Trujillo', 'Claude Bourgelat', 'medicina veterinaria', 'congreso veterinario'],
   authors: [{ name: 'Círculo de Estudios Claude Bourgelat' }],
   openGraph: {
     title: 'II Simposio Veterinario Internacional 2026',
-    description: 'El evento veterinario del año. 05 y 06 de Junio en Trujillo.',
+    description: 'Trujillo, 5 y 6 de Junio 2026 — Hotel Costa del Sol, Urb. El Golf.',
     type: 'website',
+    images: [{ url: '/flyer.jpeg', width: 800, height: 1000, alt: 'Flyer II Simposio Veterinario Internacional 2026' }],
   },
 }
 

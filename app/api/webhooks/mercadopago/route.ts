@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const attendee = attendees[0]
-    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
     const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
 
     // Manejar pago aprobado

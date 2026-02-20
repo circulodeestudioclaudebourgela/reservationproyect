@@ -347,7 +347,7 @@ const baseTemplate = (content: string) => `
     <div class="footer">
       <p>
         <strong>II Simposio Veterinario Internacional 2026</strong><br>
-        12 y 13 de Junio, 2026 • Hotel Costa del Sol - El Golf, Trujillo
+        05 y 06 de Junio, 2026 • Hotel Costa del Sol - Av. Los Cocoteros 505, El Golf, Trujillo
       </p>
       <p style="margin-top: 16px;">
         <a href="mailto:circulodeestudiosclaudebourgela@gmail.com">circulodeestudiosclaudebourgela@gmail.com</a>
@@ -403,7 +403,7 @@ export function generatePaymentConfirmationEmail(data: RegistrationEmailData): s
       </div>
       <div class="ticket-info">
         <span>Fecha del evento:</span>
-        <span>12-13 de Junio, 2026</span>
+        <span>05-06 de Junio, 2026</span>
       </div>
       <div class="ticket-info">
         <span>Monto pagado:</span>
@@ -418,8 +418,8 @@ export function generatePaymentConfirmationEmail(data: RegistrationEmailData): s
     <div class="info-box">
       <h4>Ubicación del evento</h4>
       <p>
-        <strong>Hotel Costa del Sol - El Golf</strong><br>
-        Av. El Golf 580, Trujillo, La Libertad
+        <strong>Hotel Costa del Sol</strong><br>
+        Av. Los Cocoteros 505, Urb. El Golf, Trujillo
       </p>
     </div>
     
@@ -563,7 +563,7 @@ export function generateEventReminderEmail(data: RegistrationEmailData, daysUnti
     <div class="ticket-card">
       <div class="ticket-info">
         <span>📅 Fecha:</span>
-        <span>12-13 de Junio, 2026</span>
+        <span>05-06 de Junio, 2026</span>
       </div>
       <div class="ticket-info">
         <span>📍 Lugar:</span>
@@ -589,8 +589,8 @@ export function generateEventReminderEmail(data: RegistrationEmailData, daysUnti
     <div class="info-box">
       <h4>📍 Cómo llegar</h4>
       <p>
-        Hotel Costa del Sol - El Golf<br>
-        Av. El Golf 580, Trujillo<br>
+        Hotel Costa del Sol — Urb. El Golf<br>
+        Av. Los Cocoteros 505, Trujillo<br>
         <a href="https://maps.google.com/?q=Hotel+Costa+del+Sol+El+Golf+Trujillo" style="color: #0d9488;">
           Ver en Google Maps →
         </a>

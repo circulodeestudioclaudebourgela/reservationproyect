@@ -12,9 +12,13 @@ export default function Footer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand & Description */}
           <div className="lg:col-span-2">
-            <h3 className="font-serif text-2xl font-bold mb-4">
-              II Simposio Veterinario Internacional
-            </h3>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="II Simposio Veterinario Internacional 2026"
+              className="h-14 w-auto mb-5"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
             <p className="text-primary-foreground/70 mb-6 leading-relaxed max-w-md">
               Organizado por el Círculo de Estudios Claude Bourgelat, reunimos a los 
               mejores profesionales del sector veterinario para compartir conocimientos, 
@@ -53,14 +57,15 @@ export default function Footer() {
                 <Calendar className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium text-primary-foreground">05 y 06 de Junio, 2026</p>
-                  <p className="text-sm">08:00 AM - 06:00 PM</p>
+                  <p className="text-sm">Conferencias · 4 y 7 Jun: Talleres</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
                 <div>
                   <p className="font-medium text-primary-foreground">Hotel Costa del Sol</p>
-                  <p className="text-sm">El Golf, Trujillo, Perú</p>
+                  <p className="text-sm">Av. Los Cocoteros 505, Urb. El Golf</p>
+                  <p className="text-sm">Trujillo, Perú</p>
                 </div>
               </li>
             </ul>
@@ -81,12 +86,10 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-secondary shrink-0" />
-                <a 
-                  href="tel:+51944123456" 
-                  className="hover:text-secondary transition-colors"
-                >
-                  +51 944 123 456
-                </a>
+                <div className="flex flex-col gap-1">
+                  <a href="tel:+51920211630" className="hover:text-secondary transition-colors">+51 920 211 630</a>
+                  <a href="tel:+51940668619" className="hover:text-secondary transition-colors">+51 940 668 619</a>
+                </div>
               </li>
             </ul>
           </div>

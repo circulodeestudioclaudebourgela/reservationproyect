@@ -44,26 +44,36 @@ const features = [
 ]
 
 const agendaDay1 = [
-  { time: '08:00 - 09:00', title: 'Registro y Acreditación', type: 'registro' },
-  { time: '09:00 - 09:30', title: 'Ceremonia de Inauguración', type: 'ceremonia' },
-  { time: '09:30 - 11:00', title: 'Ponencia Magistral: Avances en Medicina Interna', type: 'ponencia' },
-  { time: '11:00 - 11:30', title: 'Coffee Break', type: 'break' },
-  { time: '11:30 - 13:00', title: 'Panel: Nuevas Tecnologías en Diagnóstico', type: 'panel' },
-  { time: '13:00 - 14:30', title: 'Almuerzo', type: 'break' },
-  { time: '14:30 - 16:00', title: 'Talleres Paralelos: Cirugía / Imagenología', type: 'taller' },
-  { time: '16:00 - 16:30', title: 'Coffee Break', type: 'break' },
-  { time: '16:30 - 18:00', title: 'Conferencia: Bienestar Animal en la Práctica', type: 'ponencia' },
+  { time: '08:30 - 09:00', title: 'Apertura del evento', type: 'ceremonia' },
+  { time: '09:00 - 09:45', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '09:45 - 10:30', title: 'Actualización en el manejo anestésico: Transición integral del modelo convencional al sistema balanceado y monitoreado — MV. Alexander Sánchez', type: 'ponencia' },
+  { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
+  { time: '10:50 - 11:35', title: 'Monitorización gasométrica en el paciente crítico — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '11:35 - 12:20', title: 'Dra. Giselle Tomassoni', type: 'ponencia' },
+  { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
+  { time: '14:30 - 15:15', title: 'Biomarcadores y mecanismos fisiopatológicos del daño renal agudo en felinos domésticos — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
+  { time: '15:15 - 16:00', title: 'Hipotermia perioperatoria: mecanismos, prevención y consecuencias — MV. Alexander Sánchez', type: 'ponencia' },
+  { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
+  { time: '16:20 - 17:05', title: 'FLUTD complejo y casos refractarios — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
+  { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
+  { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
+  { time: '18:10 - 18:55', title: 'Dr. Mykel Povea', type: 'ponencia' },
 ]
 
 const agendaDay2 = [
-  { time: '09:00 - 10:30', title: 'Ponencia Magistral: Medicina Preventiva', type: 'ponencia' },
-  { time: '10:30 - 11:00', title: 'Coffee Break', type: 'break' },
-  { time: '11:00 - 12:30', title: 'Panel: Casos Clínicos Complejos', type: 'panel' },
-  { time: '12:30 - 14:00', title: 'Almuerzo', type: 'break' },
-  { time: '14:00 - 15:30', title: 'Talleres Paralelos: Dermatología / Oncología', type: 'taller' },
-  { time: '15:30 - 16:00', title: 'Coffee Break', type: 'break' },
-  { time: '16:00 - 17:00', title: 'Conferencia de Clausura', type: 'ponencia' },
-  { time: '17:00 - 17:30', title: 'Ceremonia de Clausura y Entrega de Certificados', type: 'ceremonia' },
+  { time: '09:00 - 09:45', title: 'Valoración de la vía aérea previo a la inducción — MV. Alexander Sánchez', type: 'ponencia' },
+  { time: '09:45 - 10:30', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
+  { time: '10:50 - 11:35', title: 'Dra. Giselle Tomassoni', type: 'ponencia' },
+  { time: '11:35 - 12:20', title: 'Criterios terapéuticos para la selección de derivados sanguíneos — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
+  { time: '14:30 - 15:15', title: 'Estrategias multimodales frente al paradigma de los opioides: Análisis crítico de la anestesia libre de opioides (OFA) en veterinaria — MV. Alexander Sánchez', type: 'ponencia' },
+  { time: '15:15 - 16:00', title: 'Introducción a la interpretación de electrolitos y desórdenes ácido-base — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
+  { time: '16:20 - 17:05', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
+  { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
+  { time: '18:10 - 18:55', title: 'Clausura', type: 'ceremonia' },
 ]
 
 const getTypeStyles = (type: string) => {
@@ -177,7 +187,8 @@ export default function InfoSections() {
               </h2>
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
                 El II Simposio Veterinario Internacional reúne a los mejores profesionales 
-                del sector para compartir conocimientos, experiencias y las últimas innovaciones.
+                del sector para compartir conocimientos en cirugía abdominal, ultrasonografía diagnóstica, 
+                técnicas mínimamente invasivas y las últimas evidencias en investigación clínica para animales de compañía.
               </p>
             </div>
 
@@ -215,7 +226,7 @@ export default function InfoSections() {
                 Agenda del Evento
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Dos días intensivos de aprendizaje, práctica y networking profesional.
+                Dos días de conferencias (05 y 06 de Junio) con talleres pre y post congreso el 4 y 7 de Junio.
               </p>
             </div>
 
@@ -228,7 +239,7 @@ export default function InfoSections() {
                   </div>
                   <div>
                     <h3 className="font-serif text-2xl font-bold text-foreground">Día 1</h3>
-                    <p className="text-muted-foreground text-sm">Jueves, 12 de Junio</p>
+                    <p className="text-muted-foreground text-sm">Viernes, 05 de Junio</p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -252,7 +263,7 @@ export default function InfoSections() {
                   </div>
                   <div>
                     <h3 className="font-serif text-2xl font-bold text-foreground">Día 2</h3>
-                    <p className="text-muted-foreground text-sm">Viernes, 13 de Junio</p>
+                    <p className="text-muted-foreground text-sm">Sábado, 06 de Junio</p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -358,6 +369,79 @@ export default function InfoSections() {
         </div>
       </section>
 
+      {/* Flyer Section */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
+                Programa Oficial
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
+                El evento que no puedes perderte
+              </h2>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+              {/* Flyer image */}
+              <div className="md:w-1/2 flex justify-center">
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5 rounded-3xl blur-2xl" />
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10" style={{ transform: 'rotate(-1deg)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/flyer.jpeg"
+                      alt="Flyer oficial II Simposio Veterinario Internacional 2026"
+                      className="w-full max-w-[320px] md:max-w-[380px] block"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Info lateral */}
+              <div className="md:w-1/2 space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
+                    <span className="text-2xl">📅</span>
+                    <div>
+                      <p className="font-semibold text-foreground">Fechas del evento</p>
+                      <p className="text-muted-foreground text-sm">4 de Junio: Taller Pre-Congreso</p>
+                      <p className="text-muted-foreground text-sm">5 y 6 de Junio: Conferencias</p>
+                      <p className="text-muted-foreground text-sm">7 de Junio: Talleres Post-Congreso</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
+                    <span className="text-2xl">📍</span>
+                    <div>
+                      <p className="font-semibold text-foreground">Sede</p>
+                      <p className="text-muted-foreground text-sm">Hotel Costa del Sol</p>
+                      <p className="text-muted-foreground text-sm">Av. Los Cocoteros 505, Urb. El Golf</p>
+                      <p className="text-muted-foreground text-sm">Trujillo, Perú</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
+                    <span className="text-2xl">📞</span>
+                    <div>
+                      <p className="font-semibold text-foreground">Informes e inscripciones</p>
+                      <p className="text-muted-foreground text-sm">+51 920 211 630</p>
+                      <p className="text-muted-foreground text-sm">+51 940 668 619</p>
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href="/flyer.jpeg"
+                  download="flyer-simposio-veterinario-2026.jpg"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-secondary hover:bg-secondary/90 text-white font-semibold rounded-xl shadow-lg shadow-secondary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Descargar flyer
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Location Section */}
       <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
@@ -384,7 +468,7 @@ export default function InfoSections() {
                     Hotel Costa del Sol
                   </h3>
                   <p className="text-xl text-secondary font-medium mb-6">
-                    El Golf - Wyndham
+                    Urb. El Golf — Trujillo, Perú
                   </p>
                   
                   <div className="space-y-4 mb-8">
@@ -399,23 +483,24 @@ export default function InfoSections() {
                         <div>
                           <p className="font-medium text-foreground">Dirección</p>
                           <p className="text-muted-foreground">
-                            Av. El Golf 500, Urb. El Golf<br />
-                            Trujillo, La Libertad 13009
+                            Av. Los Cocoteros 505, Urb. El Golf<br />
+                            Trujillo, La Libertad
                           </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <Phone className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
                         <div>
-                          <p className="font-medium text-foreground">Teléfono</p>
-                          <p className="text-muted-foreground">+51 44 484848</p>
+                          <p className="font-medium text-foreground">Informes e Inscripciones</p>
+                          <p className="text-muted-foreground">+51 920 211 630</p>
+                          <p className="text-muted-foreground">+51 940 668 619</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <Mail className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
                         <div>
                           <p className="font-medium text-foreground">Email</p>
-                          <p className="text-muted-foreground">eventos.trujillo@costadelsolperu.com</p>
+                          <p className="text-muted-foreground">circulodeestudiosclaudebourgela@gmail.com</p>
                         </div>
                       </div>
                     </div>
@@ -444,7 +529,7 @@ export default function InfoSections() {
                 {/* Google Maps Embed */}
                 <div className="bg-muted min-h-[400px] lg:min-h-full relative overflow-hidden">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3949.723!2d-79.0359!3d-8.1133!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91ad3d8e1f42d2ff%3A0x9f5b4f6c5e6f0f25!2sHotel%20Costa%20del%20Sol%20Wyndham%20Trujillo%20Golf!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d987.3984199101368!2d-79.0402410738877!3d-8.14278009887682!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91ad3d8186ba493f%3A0x6c360c4d677a2f8!2sHotel%20%7C%20Wyndham%20Costa%20del%20Sol%20Trujillo!5e0!3m2!1ses!2spe!4v1771388722252!5m2!1ses!2spe"
                     width="100%"
                     height="100%"
                     style={{ border: 0, minHeight: '400px' }}

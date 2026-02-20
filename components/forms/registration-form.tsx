@@ -22,9 +22,9 @@ interface RegistrationFormProps {
 }
 
 // Precios dinámicos
-const EARLY_BIRD_PRICE = 250.00  // Precio hasta abril 2026
-const REGULAR_PRICE = 350.00    // Precio después de abril 2026
-const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+const EARLY_BIRD_PRICE = 250.00  // Precio preventa hasta 20 de abril 2026
+const REGULAR_PRICE = 350.00    // Precio regular hasta 05 de junio 2026
+const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
 
 export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -104,7 +104,7 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                 {isEarlyBird && (
                   <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
                     <Clock className="w-4 h-4" />
-                    <span>¡Quedan {daysLeft} días de precio promocional!</span>
+                    <span>Preventa hasta 20 de Abril · {daysLeft} días restantes</span>
                   </div>
                 )}
                 {!isEarlyBird && (

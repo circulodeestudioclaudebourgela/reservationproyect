@@ -68,7 +68,7 @@ type CheckoutStep = 'summary' | 'payment-select' | 'yape-form' | 'card-form' | '
 const CURRENCY = 'S/'
 const EARLY_BIRD_PRICE = 250.00
 const REGULAR_PRICE = 350.00
-const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
 
 // Comisiones de transacción
 const FEES = {
@@ -459,7 +459,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-secondary" />
-                  <span className="text-foreground">Hotel Costa del Sol - El Golf, Trujillo</span>
+                  <span className="text-foreground">Hotel Costa del Sol, Av. Los Cocoteros 505, Urb. El Golf, Trujillo</span>
                 </div>
               </div>
 
@@ -960,7 +960,7 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
 
                 {/* Ticket footer */}
                 <div className="bg-primary-foreground/10 px-6 py-3 flex items-center justify-between text-xs text-primary-foreground/70">
-                  <span>Hotel Costa del Sol - El Golf, Trujillo</span>
+                  <span>Hotel Costa del Sol, Av. Los Cocoteros 505, Urb. El Golf, Trujillo</span>
                   <span>Presenta tu DNI y este código</span>
                 </div>
               </div>

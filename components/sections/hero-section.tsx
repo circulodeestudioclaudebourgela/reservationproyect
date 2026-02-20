@@ -29,7 +29,7 @@ function useCountdown(targetDate: Date) {
 }
 
 export default function HeroSection() {
-  const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+  const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
   const EVENT_DATE = new Date('2026-06-05T08:00:00')
   const countdown = useCountdown(EVENT_DATE)
   const earlyBird = useCountdown(EARLY_BIRD_DEADLINE)
@@ -75,24 +75,23 @@ export default function HeroSection() {
 
       <div className="relative container mx-auto px-4 pt-24 md:pt-32 pb-44 md:pb-52">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Organization badge */}
-          <div className="mb-8">
-            <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm font-medium text-white/90">
-              <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
-              Círculo de Estudios Claude Bourgelat
-            </span>
+          {/* Logo oficial */}
+          <div className="mb-6 flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="II Simposio Veterinario Internacional 2026"
+              className="h-24 sm:h-28 md:h-32 w-auto drop-shadow-2xl"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </div>
 
-          {/* Main title */}
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-[1.1] tracking-tight">
-            <span className="block">II Simposio</span>
-            <span className="block text-secondary">Veterinario</span>
-            <span className="block text-4xl sm:text-5xl md:text-6xl font-medium mt-2">Internacional 2026</span>
-          </h1>
+          {/* H1 para SEO (oculto visualmente, el logo lo cubre) */}
+          <h1 className="sr-only">II Simposio Veterinario Internacional 2026</h1>
 
           {/* Tagline */}
           <p className="text-xl md:text-2xl mb-6 text-primary-foreground/80 font-light max-w-2xl mx-auto">
-            El evento veterinario del año
+            Trujillo, La Libertad · Cirugía, Ultrasonografía &amp; Técnicas Mínimamente Invasivas
           </p>
 
           {/* Early Bird Countdown */}
@@ -101,7 +100,7 @@ export default function HeroSection() {
               <div className="bg-amber-500/20 border border-amber-400/30 backdrop-blur-sm rounded-xl px-6 py-4">
                 <div className="flex items-center gap-2 mb-3 justify-center">
                   <Clock className="w-4 h-4 text-amber-300" />
-                  <p className="text-sm font-medium text-amber-200">Precio Early Bird termina en:</p>
+                  <p className="text-sm font-medium text-amber-200">Preventa hasta el 20 de Abril:</p>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   {[
@@ -128,11 +127,11 @@ export default function HeroSection() {
           <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
               <Calendar className="w-4 h-4 text-secondary" />
-              <span>05 y 06 de Junio, 2026</span>
+              <span>4–7 de Junio, 2026 · Trujillo</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
               <MapPin className="w-4 h-4 text-secondary" />
-              <span>Hotel Costa del Sol - El Golf, Trujillo</span>
+              <span>Hotel Costa del Sol, Av. Los Cocoteros 505, El Golf, Trujillo</span>
             </div>
           </div>
 
@@ -158,16 +157,16 @@ export default function HeroSection() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 pt-12 border-t border-white/10 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">20+</div>
+              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">5</div>
               <p className="text-sm md:text-base text-primary-foreground/70">Ponentes Expertos</p>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">2</div>
-              <p className="text-sm md:text-base text-primary-foreground/70">Días de Conferencias</p>
+              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">4</div>
+              <p className="text-sm md:text-base text-primary-foreground/70">Días de Evento</p>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">10+</div>
-              <p className="text-sm md:text-base text-primary-foreground/70">Talleres Prácticos</p>
+              <div className="text-4xl md:text-5xl font-bold text-secondary mb-2">2</div>
+              <p className="text-sm md:text-base text-primary-foreground/70">Talleres Pre &amp; Post</p>
             </div>
           </div>
 

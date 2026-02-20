@@ -11,7 +11,7 @@ import {
 // Precios dinámicos
 const EARLY_BIRD_PRICE = 250.00
 const REGULAR_PRICE = 350.00
-const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
 
 // Calcular precio actual
 const getCurrentPrice = () => {

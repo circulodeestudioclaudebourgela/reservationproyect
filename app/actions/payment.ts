@@ -25,7 +25,7 @@ export async function processYapePayment(
   try {
     // Validar precio actual vs precio enviado
     // Para Yape también se cobra comisión del 5%
-    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
     const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
     const expectedAmount = basePrice * 1.05  // Precio base + 5% comisión
     
@@ -126,7 +126,7 @@ export async function processCardPayment(
   try {
     // Validar precio actual vs precio enviado
     // Para tarjeta se cobra el precio base + 5% de comisión
-    const EARLY_BIRD_DEADLINE = new Date('2026-05-01T00:00:00')
+    const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
     const basePrice = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
     const expectedAmount = basePrice * 1.05  // Precio base + 5% comisión
     
