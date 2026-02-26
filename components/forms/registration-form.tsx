@@ -26,8 +26,37 @@ const EARLY_BIRD_PRICE = 250.00  // Precio preventa hasta 20 de abril 2026
 const REGULAR_PRICE = 350.00    // Precio regular hasta 05 de junio 2026
 const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
 
+const WORKSHOPS = [
+  {
+    title: "Tips and Tricks en Cirugía Veterinaria",
+    speaker: "Dr. Maykel Povea",
+    date: "7 de junio",
+    price: 1000.00,
+  },
+  {
+    title: "Anestesia Veterinaria",
+    speaker: "Dr. Alexander Sánchez",
+    date: "7 de junio",
+    price: 700.00,
+  },
+  {
+    title: "Endoscopia Veterinaria Diagnóstica",
+    speaker: "Dr. Luis Lam",
+    date: "4 de junio",
+    price: 600.00,
+  },
+  {
+    title: "Ecografía Veterinaria A-FAST / Ecografía Gestacional",
+    speaker: "Dr(c). MSc. M.V.Z. Liev Tamariz",
+    date: "4 y 7 de junio",
+    price: 400.00,
+  }
+]
+
 export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [paymentCategory, setPaymentCategory] = useState<'event' | 'workshops'>('event')
+  const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null)
   
   // Calcular precio según fecha
   const { currentPrice, isEarlyBird, daysLeft } = useMemo(() => {
@@ -86,47 +115,120 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
             </p>
           </div>
 
-          {/* Price card */}
-          <Card className="p-6 mb-8 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground border-0 shadow-xl overflow-hidden relative">
-            {isEarlyBird && (
-              <div className="absolute top-0 right-0 bg-secondary text-white px-4 py-1 text-xs font-semibold rounded-bl-lg flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Early Bird
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-primary-foreground/80 text-sm font-medium mb-1">Inversión</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">S/ {currentPrice.toFixed(2)}</span>
-                  <span className="text-primary-foreground/70 text-sm">por persona</span>
-                </div>
-                {isEarlyBird && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
-                    <Clock className="w-4 h-4" />
-                    <span>Preventa hasta 20 de Abril · {daysLeft} días restantes</span>
-                  </div>
-                )}
-                {!isEarlyBird && (
-                  <p className="text-primary-foreground/60 text-xs mt-2">Precio regular</p>
-                )}
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
-                  <CheckCircle2 className="w-4 h-4 text-secondary" />
-                  <span>Incluye certificado</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
-                  <CheckCircle2 className="w-4 h-4 text-secondary" />
-                  <span>Coffee breaks</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
-                  <CheckCircle2 className="w-4 h-4 text-secondary" />
-                  <span>Material digital</span>
-                </div>
-              </div>
+          {/* Choice Chips */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex bg-primary/5 p-1 rounded-full border border-primary/10">
+              <button
+                type="button"
+                onClick={() => setPaymentCategory('event')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+                  paymentCategory === 'event'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-primary/70 hover:text-primary'
+                }`}
+              >
+                Pago del Evento
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentCategory('workshops')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+                  paymentCategory === 'workshops'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-primary/70 hover:text-primary'
+                }`}
+              >
+                Pago de Talleres
+              </button>
             </div>
-          </Card>
+          </div>
+
+          {/* Price cards */}
+          {paymentCategory === 'event' ? (
+            <Card className="p-6 mb-8 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground border-0 shadow-xl overflow-hidden relative">
+              {isEarlyBird && (
+                <div className="absolute top-0 right-0 bg-secondary text-white px-4 py-1 text-xs font-semibold rounded-bl-lg flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Early Bird
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-primary-foreground/80 text-sm font-medium mb-1">Inversión</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">S/ {currentPrice.toFixed(2)}</span>
+                    <span className="text-primary-foreground/70 text-sm">por persona</span>
+                  </div>
+                  {isEarlyBird && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-secondary">
+                      <Clock className="w-4 h-4" />
+                      <span>Preventa hasta 20 de Abril · {daysLeft} días restantes</span>
+                    </div>
+                  )}
+                  {!isEarlyBird && (
+                    <p className="text-primary-foreground/60 text-xs mt-2">Precio regular</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center justify-end gap-2 text-sm text-primary-foreground/80">
+                    <CheckCircle2 className="w-4 h-4 text-secondary" />
+                    <span>Incluye certificado</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 text-sm text-primary-foreground/80 mt-1">
+                    <CheckCircle2 className="w-4 h-4 text-secondary" />
+                    <span>Coffee breaks</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 text-sm text-primary-foreground/80 mt-1">
+                    <CheckCircle2 className="w-4 h-4 text-secondary" />
+                    <span>Material digital</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {WORKSHOPS.map((workshop, idx) => {
+                const isSelected = selectedWorkshop === idx;
+                return (
+                  <Card 
+                    key={idx} 
+                    onClick={() => setSelectedWorkshop(idx)}
+                    className={`p-5 text-primary-foreground border-2 shadow-xl overflow-hidden relative group transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-primary to-primary border-secondary ring-2 ring-secondary ring-offset-2 scale-[1.02]' 
+                        : 'bg-gradient-to-r from-primary to-primary/90 border-transparent hover:from-primary/90 hover:to-primary hover:scale-[1.01]'
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-0 right-0 bg-secondary text-white px-3 py-1 text-xs font-bold rounded-bl-lg flex items-center gap-1 shadow-md z-10">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Seleccionado
+                      </div>
+                    )}
+                    <div className="flex flex-col h-full justify-between gap-4">
+                      <div>
+                        <h4 className="font-semibold text-lg leading-tight mb-3 text-white pr-6">{workshop.title}</h4>
+                        <div className="space-y-2">
+                          <p className="text-sm text-primary-foreground/90 flex items-center gap-2">
+                            <User className="w-4 h-4 text-secondary" />
+                            {workshop.speaker}
+                          </p>
+                          <p className="text-sm text-primary-foreground/90 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-secondary" />
+                            {workshop.date}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-baseline gap-2 pt-4 border-t border-primary-foreground/20 mt-auto">
+                        <span className="text-3xl font-bold text-white">S/ {workshop.price.toFixed(2)}</span>
+                        <span className="text-primary-foreground/80 text-xs">por persona</span>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
           {/* Form */}
           <Card className="p-8 md:p-10 border border-border bg-card shadow-lg">
@@ -264,11 +366,30 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
 
               {/* Spacer */}
               <div className="pt-4 border-t border-border">
+                {/* Order Summary */}
+                <div className="bg-primary/5 rounded-xl p-5 mb-6 flex items-center justify-between border border-primary/10">
+                  <div className="flex flex-col">
+                    <span className="text-foreground font-semibold">Total a pagar</span>
+                    <span className="text-sm text-muted-foreground">
+                      {paymentCategory === 'event' ? 'Pase General' : (
+                        selectedWorkshop !== null ? 'Pase Taller' : 'Selecciona un taller'
+                      )}
+                    </span>
+                  </div>
+                  <span className="text-3xl font-bold text-primary">
+                    S/ {paymentCategory === 'event' 
+                      ? currentPrice.toFixed(2) 
+                      : selectedWorkshop !== null 
+                        ? WORKSHOPS[selectedWorkshop].price.toFixed(2) 
+                        : '0.00'}
+                  </span>
+                </div>
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-secondary hover:bg-secondary/90 text-white font-semibold py-6 text-lg shadow-lg shadow-secondary/20 transition-all hover:shadow-xl hover:shadow-secondary/25"
+                  disabled={isSubmitting || (paymentCategory === 'workshops' && selectedWorkshop === null)}
+                  className="w-full bg-secondary hover:bg-secondary/90 text-white font-semibold py-6 text-lg shadow-lg shadow-secondary/20 transition-all hover:shadow-xl hover:shadow-secondary/25 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -276,7 +397,9 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                       Procesando...
                     </span>
                   ) : (
-                    'Continuar al Pago'
+                    paymentCategory === 'workshops' && selectedWorkshop === null 
+                      ? 'Seleccionar Taller para Continuar' 
+                      : 'Continuar al Pago'
                   )}
                 </Button>
 

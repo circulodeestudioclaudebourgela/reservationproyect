@@ -45,35 +45,46 @@ const features = [
 
 const agendaDay1 = [
   { time: '08:30 - 09:00', title: 'Apertura del evento', type: 'ceremonia' },
-  { time: '09:00 - 09:45', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '09:00 - 09:45', title: 'FLUTD complejo y casos refractarios — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
   { time: '09:45 - 10:30', title: 'Actualización en el manejo anestésico: Transición integral del modelo convencional al sistema balanceado y monitoreado — MV. Alexander Sánchez', type: 'ponencia' },
   { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
   { time: '10:50 - 11:35', title: 'Monitorización gasométrica en el paciente crítico — Dr. Sebastian Velez', type: 'ponencia' },
-  { time: '11:35 - 12:20', title: 'Dra. Giselle Tomassoni', type: 'ponencia' },
+  { time: '11:35 - 12:20', title: 'Ultrasonografía aplicada a la Ginecología y Obstetricia Veterinaria — Dr. Liev Tamariz', type: 'ponencia' },
   { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
   { time: '14:30 - 15:15', title: 'Biomarcadores y mecanismos fisiopatológicos del daño renal agudo en felinos domésticos — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
   { time: '15:15 - 16:00', title: 'Hipotermia perioperatoria: mecanismos, prevención y consecuencias — MV. Alexander Sánchez', type: 'ponencia' },
   { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
-  { time: '16:20 - 17:05', title: 'FLUTD complejo y casos refractarios — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
+  { time: '16:20 - 17:05', title: 'Tips and Tricks de Cirugía Abdominal — Dr. Maykel Povea', type: 'ponencia' },
   { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
   { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
-  { time: '18:10 - 18:55', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '18:10 - 18:55', title: 'Manejo Quirúrgico de las Anomalías de Anillo Vascular en pequeños animales: Enfoques y Estrategias Avanzadas — Dr. Maykel Povea', type: 'ponencia' },
 ]
 
 const agendaDay2 = [
   { time: '09:00 - 09:45', title: 'Valoración de la vía aérea previo a la inducción — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '09:45 - 10:30', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '09:45 - 10:30', title: 'Introducción a la interpretación de electrolitos y desórdenes ácido-base — Dr. Sebastian Velez', type: 'ponencia' },
   { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
-  { time: '10:50 - 11:35', title: 'Dra. Giselle Tomassoni', type: 'ponencia' },
-  { time: '11:35 - 12:20', title: 'Criterios terapéuticos para la selección de derivados sanguíneos — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '10:50 - 11:35', title: 'Criterios terapéuticos para la selección de derivados sanguíneos — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '11:35 - 12:20', title: 'Endoscopia Digestiva: Del Diagnóstico a la Terapéutica — Dr. Luis Lam', type: 'ponencia' },
   { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
   { time: '14:30 - 15:15', title: 'Estrategias multimodales frente al paradigma de los opioides: Análisis crítico de la anestesia libre de opioides (OFA) en veterinaria — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '15:15 - 16:00', title: 'Introducción a la interpretación de electrolitos y desórdenes ácido-base — Dr. Sebastian Velez', type: 'ponencia' },
+  { time: '15:15 - 16:00', title: 'Avances recientes en Colecistectomía Laparoscópica (Estado del Arte) — Dr. Maykel Povea', type: 'ponencia' },
   { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
-  { time: '16:20 - 17:05', title: 'Dr. Mykel Povea', type: 'ponencia' },
+  { time: '16:20 - 17:05', title: 'Temas avanzados en Cirugía Oncológica: Resolución Quirúrgica de Casos Clínicos Complejos — Dr. Maykel Povea', type: 'ponencia' },
   { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
   { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
   { time: '18:10 - 18:55', title: 'Clausura', type: 'ceremonia' },
+]
+
+const workshopsPre = [
+  { time: 'Por confirmar', title: 'Ecografía Gestacional — Dr. Liev Tamariz', type: 'taller' },
+  { time: 'Por confirmar', title: 'Endoscopia Veterinaria — Dr. Luis Lam', type: 'taller' },
+]
+
+const workshopsPost = [
+  { time: 'Por confirmar', title: 'Tips and Tricks en Cirugía Veterinaria — Dr. Maykel Povea', type: 'taller' },
+  { time: 'Por confirmar', title: 'Anestesia Veterinaria — MV. Alexander Sánchez', type: 'taller' },
+  { time: 'Por confirmar', title: 'Ecografía Veterinaria A-FAST — Dr. Liev Tamariz', type: 'taller' },
 ]
 
 const getTypeStyles = (type: string) => {
@@ -95,39 +106,33 @@ const getTypeStyles = (type: string) => {
 
 const testimonials = [
   {
-    name: 'Dr. Carlos Mendoza',
-    role: 'Clínica Veterinaria San Martín',
-    image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face',
-    quote: 'Excelentes ponencias, especialmente la de dermatología veterinaria avanzada. Los talleres prácticos fueron muy valiosos para mi práctica diaria.',
+    name: 'M.V JAVIER MOULY',
+    role: 'ESPECIALISTA EN MEDICINA CRITICA Y CUIDADOS INTENSIVOS DE PEQUEÑOS ANIMALES',
+    image: '/OPINION%20DE%20PROFESIONALES/MV%20JAVIER%20MOULY/mouly.jpg',
+    quote: 'Un excelente experiencia, con un feed back increíble. Se ve el esfuerzo y las ganas de aprender.',
     rating: 5,
   },
   {
-    name: 'Dra. María Torres',
-    role: 'Hospital Veterinario Central',
-    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
-    quote: 'Networking invaluable. Conocí colegas de todo el país y establecí contactos importantes para colaboraciones futuras. Altamente recomendado.',
-    rating: 5,
-  },
-  {
-    name: 'Dr. Luis Ramírez',
-    role: 'SENASA - La Libertad',
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    quote: 'Organización impecable y contenido de primera calidad. Las instalaciones del hotel fueron perfectas. Ya estoy esperando la edición 2026.',
+    name: 'M.V JOSÉ VILLENA',
+    role: 'ESPECIALISTA EN DIAGNÓSTICO POR IMÁGENES',
+    image: '/OPINION%20DE%20PROFESIONALES/MV%20JOSE%20VILLENA/villena.jpg',
+    quote: 'Evento que propone actualización; que nunca antes fue realizado por estudiantes de medicina veterinaria de la ciudad de Trujillo, y no por la Universidad, con resultados muy favorables, con algoritmos claros y precisos en cada especialista y cada charla.',
     rating: 5,
   },
 ]
 
 const sponsors = [
-  { name: 'Royal Canin', tier: 'gold' },
-  { name: 'Hill\'s Pet Nutrition', tier: 'gold' },
-  { name: 'Bayer Animal Health', tier: 'gold' },
-  { name: 'MSD Animal Health', tier: 'silver' },
-  { name: 'Purina Pro Plan', tier: 'silver' },
-  { name: 'Zoetis', tier: 'silver' },
-  { name: 'Agrovet Market', tier: 'bronze' },
-  { name: 'Vetoquinol', tier: 'bronze' },
-  { name: 'Dechra', tier: 'bronze' },
-  { name: 'IDEXX', tier: 'gold' },
+  { name: 'AHD', logo: '/LOGOS%20MARCAS/AHD.png' },
+  { name: 'IVSA Perú', logo: '/LOGOS%20MARCAS/IVSA%20PERU.png' },
+  { name: 'Alta Tec Medic', logo: '/LOGOS%20MARCAS/alta%20tec%20medic.png' },
+  { name: 'Epic Farm', logo: '/LOGOS%20MARCAS/epic%20farm.png' },
+  { name: 'Guau', logo: '/LOGOS%20MARCAS/guau.png' },
+  { name: 'Innovality', logo: '/LOGOS%20MARCAS/innovality.png' },
+  { name: 'Instrupet', logo: '/LOGOS%20MARCAS/instrupet.png' },
+  { name: 'Invetsa', logo: '/LOGOS%20MARCAS/invetsa.png' },
+  { name: 'Labeca', logo: '/LOGOS%20MARCAS/labeca-removebg-preview.png' },
+  { name: 'Labyes', logo: '/LOGOS%20MARCAS/labyes.jpg' },
+  { name: 'Monge', logo: '/LOGOS%20MARCAS/monge.png' },
 ]
 
 export default function InfoSections() {
@@ -150,24 +155,14 @@ export default function InfoSections() {
             {[...sponsors, ...sponsors].map((sponsor, i) => (
               <div
                 key={`${sponsor.name}-${i}`}
-                className={`flex items-center gap-3 px-6 py-3 rounded-lg border transition-colors ${
-                  sponsor.tier === 'gold'
-                    ? 'border-amber-200/60 bg-amber-50/50 text-amber-800'
-                    : sponsor.tier === 'silver'
-                    ? 'border-gray-200/60 bg-gray-50/50 text-gray-700'
-                    : 'border-gray-200/40 bg-gray-50/30 text-gray-600'
-                }`}
+                className="flex items-center justify-center w-28 md:w-36 h-16 md:h-20 shrink-0"
               >
-                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold ${
-                  sponsor.tier === 'gold'
-                    ? 'bg-amber-100 text-amber-700'
-                    : sponsor.tier === 'silver'
-                    ? 'bg-gray-100 text-gray-600'
-                    : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {sponsor.name.charAt(0)}
-                </div>
-                <span className="text-sm font-medium">{sponsor.name}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={sponsor.logo}
+                  alt={sponsor.name}
+                  className="w-full h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100"
+                />
               </div>
             ))}
           </div>
@@ -280,6 +275,66 @@ export default function InfoSections() {
               </div>
             </div>
 
+            <div className="mt-20">
+              <div className="text-center mb-12">
+                <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
+                  Talleres Especializados
+                </span>
+                <h3 className="font-serif text-3xl font-bold text-foreground">
+                  Pre y Post Congreso
+                </h3>
+              </div>
+              <div className="grid lg:grid-cols-2 gap-8">
+                {/* Talleres Pre */}
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">Pr</span>
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-2xl font-bold text-foreground">Taller Pre-Congreso</h3>
+                      <p className="text-muted-foreground text-sm">Martes, 04 de Junio</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {workshopsPre.map((item, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
+                      >
+                        <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
+                        <p className="font-medium">{item.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Talleres Post */}
+                <div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">Po</span>
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-2xl font-bold text-foreground">Talleres Post-Congreso</h3>
+                      <p className="text-muted-foreground text-sm">Domingo, 07 de Junio</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {workshopsPost.map((item, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
+                      >
+                        <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
+                        <p className="font-medium">{item.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Legend */}
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-sm">
               <div className="flex items-center gap-2">
@@ -321,7 +376,7 @@ export default function InfoSections() {
             </div>
 
             {/* Testimonials grid */}
-            <div className="grid md:grid-cols-3 gap-6 mb-16">
+            <div className="grid md:grid-cols-2 gap-6 mb-16 max-w-4xl mx-auto">
               {testimonials.map((t, idx) => (
                 <Card key={idx} className="p-6 border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
                   <Quote className="w-8 h-8 text-secondary/20 absolute top-4 right-4" />
