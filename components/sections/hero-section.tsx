@@ -91,7 +91,7 @@ export default function HeroSection() {
 
           {/* Tagline */}
           <p className="text-xl md:text-2xl mb-6 text-primary-foreground/80 font-light max-w-2xl mx-auto">
-            Trujillo, La Libertad · Cirugía, Ultrasonografía &amp; Técnicas Mínimamente Invasivas
+            Trujillo, La Libertad &amp; 2026
           </p>
 
           {/* Early Bird Countdown */}
