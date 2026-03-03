@@ -111,7 +111,7 @@ export default function HeroSection() {
                   ].map(({ value, label }) => (
                     <div key={label} className="text-center">
                       <div className="bg-white/10 rounded-lg px-2 py-1 min-w-[48px]">
-                        <div className="text-xl md:text-2xl font-bold text-white font-mono tabular-nums">
+                        <div className="text-xl md:text-2xl font-bold text-white font-mono tabular-nums" suppressHydrationWarning>
                           {String(value).padStart(2, '0')}
                         </div>
                       </div>
@@ -181,7 +181,7 @@ export default function HeroSection() {
                 { value: countdown.seconds, label: 'Segundos' },
               ].map(({ value, label }) => (
                 <div key={label} className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                  <div className="text-2xl md:text-3xl font-bold text-white font-mono tabular-nums">
+                  <div className="text-2xl md:text-3xl font-bold text-white font-mono tabular-nums" suppressHydrationWarning>
                     {String(value).padStart(2, '0')}
                   </div>
                   <div className="text-[10px] md:text-xs text-white/60">{label}</div>

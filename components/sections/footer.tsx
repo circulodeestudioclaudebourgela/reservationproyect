@@ -1,6 +1,7 @@
 'use client'
 
 import { Calendar, MapPin, Mail, Phone, Instagram, Facebook, Linkedin } from 'lucide-react'
+import { ArkosCredit } from '@/components/ui/arkos-credit'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -100,9 +101,12 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-primary-foreground/60">
-              © {currentYear} Círculo de Estudios Claude Bourgelat. Todos los derechos reservados.
-            </p>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-primary-foreground/60">
+                © {currentYear} Círculo de Estudios Claude Bourgelat. Todos los derechos reservados.
+              </p>
+              <ArkosCredit />
+            </div>
             <div className="flex items-center gap-6 text-sm text-primary-foreground/60">
               <a href="#" className="hover:text-secondary transition-colors">
                 Términos y Condiciones
