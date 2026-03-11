@@ -304,3 +304,101 @@ export async function deleteAttendee(attendeeId: string): Promise<{
     }
   }
 }
+
+/**
+ * Create a manual registration (admin action)
+ */
+export async function createManualRegistration(
+  formData: z.infer<typeof registrationSchema>,
+  markAsPaid: boolean
+): Promise<RegisterResult> {
+  try {
+    const validatedData = registrationSchema.parse(formData)
+    
+    // Check if DNI already exists
+    const { data: existingByDni } = await supabase
+      .from('attendees')
+      .select('*')
+      .eq('dni', validatedData.dni)
+      .single()
+
+    if (existingByDni) {
+      return { success: false, error: 'Ya existe un participante con este DNI.' }
+    }
+
+    // Check if email already exists
+    const { data: existingByEmail } = await supabase
+      .from('attendees')
+      .select('*')
+      .eq('email', validatedData.email)
+      .single()
+
+    if (existingByEmail) {
+      return { success: false, error: 'Ya existe un participante con este correo electrónico.' }
+    }
+
+    // Create attendee record
+    const status = markAsPaid ? 'paid' : 'pending'
+    const newAttendee: AttendeeInsert = {
+      full_name: validatedData.full_name,
+      dni: validatedData.dni,
+      email: validatedData.email,
+      phone: validatedData.phone,
+      role: validatedData.role,
+      organization: validatedData.organization || null,
+      status,
+      payment_method: markAsPaid ? 'manual' : null,
+      payment_order_id: markAsPaid ? `manual_${Date.now()}` : null,
+      ticket_code: crypto.randomUUID(),
+    }
+
+    const { data, error } = await supabase
+      .from('attendees')
+      .insert(newAttendee)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[Simposio] Supabase insert error:', error)
+      return { success: false, error: 'Error al registrar. Por favor intenta nuevamente.' }
+    }
+
+    const attendee = data as Attendee
+
+    // Admin might want the user to receive the email
+    if (markAsPaid) {
+      try {
+        const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
+        const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+
+        const { generatePaymentConfirmationEmail } = await import('@/lib/email')
+        const emailHtml = generatePaymentConfirmationEmail({
+          fullName: attendee.full_name,
+          email: attendee.email,
+          dni: attendee.dni,
+          phone: attendee.phone,
+          role: attendee.role,
+          organization: attendee.organization || undefined,
+          ticketCode: attendee.ticket_code,
+          amount,
+        })
+
+        await sendEmail(
+          attendee.email,
+          '✅ ¡Tu registro al II Simposio Veterinario está confirmado!',
+          emailHtml
+        )
+      } catch (emailError) {
+        console.error('[Simposio] Email send error on manual registration:', emailError)
+      }
+    }
+
+    return { success: true, data: attendee }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: 'Datos de formulario inválidos' }
+    }
+    console.error('[Simposio] Manual registration error:', error)
+    return { success: false, error: 'Error interno del servidor' }
+  }
+}

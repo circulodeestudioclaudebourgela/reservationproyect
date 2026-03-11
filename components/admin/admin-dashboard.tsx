@@ -5,24 +5,26 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { 
-  LogOut, 
-  Search, 
-  Eye, 
-  Trash2, 
-  Check, 
-  Users, 
-  DollarSign, 
-  Clock, 
+import {
+  LogOut,
+  Search,
+  Eye,
+  Trash2,
+  Check,
+  Users,
+  DollarSign,
+  Clock,
   TrendingUp,
   Download,
   RefreshCw,
   FileSpreadsheet,
   FileText,
   ChevronDown,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from 'lucide-react'
 import AttendeeDetailsModal from './attendee-details-modal'
+import ManualRegistrationModal from './manual-registration-modal'
 import type { Attendee } from '@/lib/supabase'
 import { exportToCSV, exportToExcel } from '@/lib/export'
 import { getAllAttendees, markAsPaid, deleteAttendee } from '@/app/actions/register'
@@ -43,6 +45,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAttendee, setSelectedAttendee] = useState<Attendee | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showManualRegistrationModal, setShowManualRegistrationModal] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -329,8 +332,8 @@ export default function AdminDashboard() {
                   {filteredAttendees.length} de {attendees.length} registros
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 sm:w-80">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 sm:mt-0">
+                <div className="relative flex-1 sm:w-64 md:w-80">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por nombre, email o DNI..."
@@ -339,52 +342,67 @@ export default function AdminDashboard() {
                     className="pl-10 bg-background border-border"
                   />
                 </div>
-                {/* Export dropdown */}
-                <div className="relative hidden md:block">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    disabled={isExporting || attendees.length === 0}
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowManualRegistrationModal(true)}
+                    className="flex-1 sm:flex-none h-10 sm:h-9"
+                    size="sm"
                   >
-                    {isExporting ? (
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4 mr-2" />
-                    )}
-                    Exportar
-                    <ChevronDown className="w-4 h-4 ml-1" />
+                    <Plus className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nuevo Registro</span>
+                    <span className="sm:hidden">Nuevo</span>
                   </Button>
-                  {showExportMenu && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setShowExportMenu(false)}
-                      />
-                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-                        <button
-                          onClick={handleExportExcel}
-                          className="w-full px-4 py-3 text-left text-sm hover:bg-muted flex items-center gap-3 transition-colors"
-                        >
-                          <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                          <div>
-                            <p className="font-medium text-foreground">Excel (.xlsx)</p>
-                            <p className="text-xs text-muted-foreground">Recomendado</p>
-                          </div>
-                        </button>
-                        <button
-                          onClick={handleExportCSV}
-                          className="w-full px-4 py-3 text-left text-sm hover:bg-muted flex items-center gap-3 transition-colors border-t border-border"
-                        >
-                          <FileText className="w-4 h-4 text-blue-600" />
-                          <div>
-                            <p className="font-medium text-foreground">CSV (.csv)</p>
-                            <p className="text-xs text-muted-foreground">Universal</p>
-                          </div>
-                        </button>
-                      </div>
-                    </>
-                  )}
+
+                  {/* Export dropdown */}
+                  <div className="relative flex-1 sm:flex-none">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      disabled={isExporting || attendees.length === 0}
+                      className="w-full h-10 sm:h-9 justify-center"
+                    >
+                      {isExporting ? (
+                        <RefreshCw className="w-4 h-4 sm:mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 sm:mr-2" />
+                      )}
+                      <span className="hidden sm:inline">Exportar</span>
+                      <span className="sm:hidden">Exportar</span>
+                      <ChevronDown className="w-4 h-4 ml-1 hidden sm:block" />
+                    </Button>
+                    {showExportMenu && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowExportMenu(false)}
+                        />
+                        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                          <button
+                            onClick={handleExportExcel}
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-muted flex items-center gap-3 transition-colors"
+                          >
+                            <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                            <div>
+                              <p className="font-medium text-foreground">Excel (.xlsx)</p>
+                              <p className="text-xs text-muted-foreground">Recomendado</p>
+                            </div>
+                          </button>
+                          <button
+                            onClick={handleExportCSV}
+                            className="w-full px-4 py-3 text-left text-sm hover:bg-muted flex items-center gap-3 transition-colors border-t border-border"
+                          >
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-foreground">CSV (.csv)</p>
+                              <p className="text-xs text-muted-foreground">Universal</p>
+                            </div>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -430,23 +448,20 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4">
-                      <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
-                        attendee.role === 'professional'
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-secondary/10 text-secondary'
-                      }`}>
+                      <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${attendee.role === 'professional'
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-secondary/10 text-secondary'
+                        }`}>
                         {getRoleLabel(attendee.role)}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-4">
-                      <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
-                        attendee.status === 'paid'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          attendee.status === 'paid' ? 'bg-green-500' : 'bg-amber-500'
-                        }`} />
+                      <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${attendee.status === 'paid'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-amber-100 text-amber-700'
+                        }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${attendee.status === 'paid' ? 'bg-green-500' : 'bg-amber-500'
+                          }`} />
                         {attendee.status === 'paid' ? 'Pagado' : 'Pendiente'}
                       </span>
                     </td>
@@ -510,6 +525,15 @@ export default function AdminDashboard() {
           onClose={() => setShowDetailsModal(false)}
         />
       )}
+
+      {/* Manual Registration Modal */}
+      <ManualRegistrationModal
+        isOpen={showManualRegistrationModal}
+        onClose={() => setShowManualRegistrationModal(false)}
+        onSuccess={() => {
+          handleRefresh()
+        }}
+      />
     </div>
   )
 }
