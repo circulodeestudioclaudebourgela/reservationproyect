@@ -127,7 +127,7 @@ export default function HeroSection() {
           <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
               <Calendar className="w-4 h-4 text-secondary" />
-              <span>4–7 de Junio, 2026 · Trujillo</span>
+              <span>5 – 6 de Junio, 2026 · Trujillo</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm">
               <MapPin className="w-4 h-4 text-secondary" />
