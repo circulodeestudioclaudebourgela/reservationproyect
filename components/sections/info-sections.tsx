@@ -133,6 +133,8 @@ const sponsors = [
   { name: 'Labeca', logo: '/LOGOS%20MARCAS/labeca-removebg-preview.png' },
   { name: 'Labyes', logo: '/LOGOS%20MARCAS/labyes.jpg' },
   { name: 'Monge', logo: '/LOGOS%20MARCAS/monge.png' },
+  { name: 'Norvet', logo: '/LOGOS%20MARCAS/norvet-removebg-preview.png' },
+  { name: 'Sagrop', logo: '/LOGOS%20MARCAS/sagrop-removebg-preview.png' },
 ]
 
 export default function InfoSections() {
