@@ -310,7 +310,9 @@ export async function deleteAttendee(attendeeId: string): Promise<{
  */
 export async function createManualRegistration(
   formData: z.infer<typeof registrationSchema>,
-  markAsPaid: boolean
+  markAsPaid: boolean,
+  customPrice?: number | null,
+  isScholarship?: boolean
 ): Promise<RegisterResult> {
   try {
     const validatedData = registrationSchema.parse(formData)
@@ -350,6 +352,8 @@ export async function createManualRegistration(
       payment_method: markAsPaid ? 'manual' : null,
       payment_order_id: markAsPaid ? `manual_${Date.now()}` : null,
       ticket_code: crypto.randomUUID(),
+      is_scholarship: isScholarship ?? false,
+      custom_price: customPrice ?? null,
     }
 
     const { data, error } = await supabase
@@ -369,7 +373,8 @@ export async function createManualRegistration(
     if (markAsPaid) {
       try {
         const EARLY_BIRD_DEADLINE = new Date('2026-04-20T23:59:59')
-        const amount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+        const defaultAmount = new Date() < EARLY_BIRD_DEADLINE ? 250.00 : 350.00
+        const amount = customPrice ?? defaultAmount
 
         const { generatePaymentConfirmationEmail } = await import('@/lib/email')
         const emailHtml = generatePaymentConfirmationEmail({

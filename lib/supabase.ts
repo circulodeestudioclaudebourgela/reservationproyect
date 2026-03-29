@@ -28,11 +28,15 @@ export interface Attendee {
   payment_order_id?: string | null
   payment_method?: PaymentMethod | null
   ticket_code: string // UUID for QR
+  is_scholarship?: boolean | null
+  custom_price?: number | null
 }
 
 // For insert operations (without generated fields)
 export type AttendeeInsert = Omit<Attendee, 'id' | 'created_at' | 'ticket_code'> & {
   ticket_code?: string
+  is_scholarship?: boolean | null
+  custom_price?: number | null
 }
 
 // For update operations

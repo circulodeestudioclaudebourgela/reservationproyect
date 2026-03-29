@@ -21,7 +21,10 @@ import {
   FileText,
   ChevronDown,
   AlertCircle,
-  Plus
+  Plus,
+  GraduationCap,
+  BadgeDollarSign,
+  Percent
 } from 'lucide-react'
 import AttendeeDetailsModal from './attendee-details-modal'
 import ManualRegistrationModal from './manual-registration-modal'
@@ -86,13 +89,18 @@ export default function AdminDashboard() {
     a.dni.includes(searchTerm)
   )
 
+  const paidAttendees = attendees.filter(a => a.status === 'paid')
   const stats = {
     total: attendees.length,
-    paid: attendees.filter(a => a.status === 'paid').length,
+    paid: paidAttendees.length,
     pending: attendees.filter(a => a.status === 'pending').length,
-    revenue: attendees.filter(a => a.status === 'paid').length * ticketPrice,
+    revenue: paidAttendees.reduce((sum, a) => sum + (a.custom_price ?? ticketPrice), 0),
     professionals: attendees.filter(a => a.role === 'professional').length,
     students: attendees.filter(a => a.role === 'student').length,
+    scholarships: attendees.filter(a => a.is_scholarship).length,
+    paidScholarships: paidAttendees.filter(a => a.is_scholarship).length,
+    scholarshipRevenue: paidAttendees.filter(a => a.is_scholarship).reduce((sum, a) => sum + (a.custom_price ?? ticketPrice), 0),
+    discountTotal: paidAttendees.filter(a => a.is_scholarship).reduce((sum, a) => sum + (ticketPrice - (a.custom_price ?? ticketPrice)), 0),
   }
 
   const handleLogout = () => {
@@ -305,16 +313,70 @@ export default function AdminDashboard() {
           <Card className="p-5 bg-card border border-border hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-muted-foreground text-sm font-medium mb-1">Ingresos</p>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Ingresos reales</p>
                 <p className="font-serif text-3xl font-bold text-foreground">
-                  S/ {stats.revenue.toLocaleString('es-PE')}
+                  S/ {stats.revenue.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  S/ {ticketPrice.toFixed(2)} por ticket
+                  Precio base: S/ {ticketPrice.toFixed(2)}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Financial Insights */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-5 bg-card border border-border">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Becados</p>
+                <p className="font-serif text-2xl font-bold text-violet-600">{stats.scholarships}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.paidScholarships} pagados · {stats.scholarships - stats.paidScholarships} pendientes
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                <GraduationCap className="w-5 h-5 text-violet-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-5 bg-card border border-border">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Ingreso de becas</p>
+                <p className="font-serif text-2xl font-bold text-foreground">
+                  S/ {stats.scholarshipRevenue.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Descuento total: S/ {stats.discountTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <BadgeDollarSign className="w-5 h-5 text-amber-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-5 bg-card border border-border">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Precio promedio</p>
+                <p className="font-serif text-2xl font-bold text-foreground">
+                  {stats.paid > 0
+                    ? `S/ ${(stats.revenue / stats.paid).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : 'S/ 0.00'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Base: S/ {ticketPrice.toFixed(2)} · {stats.paid} confirmados
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Percent className="w-5 h-5 text-blue-600" />
               </div>
             </div>
           </Card>
@@ -448,12 +510,24 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-4 md:px-6 py-4">
-                      <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${attendee.role === 'professional'
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-secondary/10 text-secondary'
-                        }`}>
-                        {getRoleLabel(attendee.role)}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full w-fit ${attendee.role === 'professional'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-secondary/10 text-secondary'
+                          }`}>
+                          {getRoleLabel(attendee.role)}
+                        </span>
+                        {attendee.is_scholarship && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 w-fit">
+                            <GraduationCap className="w-3 h-3" /> Beca
+                          </span>
+                        )}
+                        {attendee.custom_price != null && (
+                          <span className="text-xs text-muted-foreground">
+                            S/ {attendee.custom_price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 md:px-6 py-4">
                       <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${attendee.status === 'paid'
