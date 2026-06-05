@@ -30,6 +30,8 @@ export interface Attendee {
   ticket_code: string // UUID for QR
   is_scholarship?: boolean | null
   custom_price?: number | null
+  checked_in?: boolean | null // true cuando la persona ya ingresó al evento
+  checked_in_at?: string | null // hora del ingreso (null si aún no entra)
 }
 
 // For insert operations (without generated fields)

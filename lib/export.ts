@@ -18,6 +18,10 @@ const FIELD_LABELS: Record<keyof Attendee, string> = {
   payment_order_id: 'ID de Transacción',
   payment_method: 'Método de Pago',
   ticket_code: 'Código de Ticket',
+  checked_in: 'Ingresó al Evento',
+  checked_in_at: 'Hora de Ingreso',
+  is_scholarship: 'Becado',
+  custom_price: 'Precio Personalizado',
 }
 
 // Campos a incluir en la exportación (en orden)
@@ -29,6 +33,8 @@ const EXPORT_FIELDS: (keyof Attendee)[] = [
   'role',
   'organization',
   'status',
+  'checked_in',
+  'checked_in_at',
   'payment_method',
   'ticket_code',
   'created_at',
@@ -41,7 +47,7 @@ const EXPORT_FIELDS: (keyof Attendee)[] = [
 function formatValue(value: unknown, field: keyof Attendee): string {
   if (value === null || value === undefined) return ''
   
-  if (field === 'created_at') {
+  if (field === 'created_at' || field === 'checked_in_at') {
     return new Date(value as string).toLocaleDateString('es-PE', {
       year: 'numeric',
       month: '2-digit',
@@ -50,7 +56,11 @@ function formatValue(value: unknown, field: keyof Attendee): string {
       minute: '2-digit',
     })
   }
-  
+
+  if (field === 'checked_in') {
+    return value ? 'Sí' : 'No'
+  }
+
   if (field === 'role') {
     return value === 'professional' ? 'Profesional' : 'Estudiante'
   }

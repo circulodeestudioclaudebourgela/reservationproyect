@@ -15,7 +15,8 @@ import {
   Briefcase,
   CheckCircle2,
   Clock,
-  Copy
+  Copy,
+  DoorOpen
 } from 'lucide-react'
 import type { Attendee } from '@/lib/supabase'
 
@@ -84,6 +85,12 @@ export default function AttendeeDetailsModal({
                     <><Clock className="w-3 h-3 mr-1" /> Pendiente</>
                   )}
                 </span>
+                {attendee.checked_in && (
+                  <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                    <DoorOpen className="w-3 h-3 mr-1" />
+                    Ingresó{attendee.checked_in_at ? ` · ${formatDate(attendee.checked_in_at)}` : ''}
+                  </span>
+                )}
               </div>
             </div>
             <button

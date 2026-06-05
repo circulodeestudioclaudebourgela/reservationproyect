@@ -24,13 +24,16 @@ import {
   Plus,
   GraduationCap,
   BadgeDollarSign,
-  Percent
+  Percent,
+  UserCheck,
+  LogIn,
+  DoorOpen
 } from 'lucide-react'
 import AttendeeDetailsModal from './attendee-details-modal'
 import ManualRegistrationModal from './manual-registration-modal'
 import type { Attendee } from '@/lib/supabase'
 import { exportToCSV, exportToExcel } from '@/lib/export'
-import { getAllAttendees, markAsPaid, deleteAttendee } from '@/app/actions/register'
+import { getAllAttendees, markAsPaid, deleteAttendee, toggleCheckIn } from '@/app/actions/register'
 
 // Precios dinámicos
 const EARLY_BIRD_PRICE = 250.00
@@ -94,6 +97,7 @@ export default function AdminDashboard() {
     total: attendees.length,
     paid: paidAttendees.length,
     pending: attendees.filter(a => a.status === 'pending').length,
+    checkedIn: attendees.filter(a => a.checked_in).length,
     revenue: paidAttendees.reduce((sum, a) => sum + (a.custom_price ?? ticketPrice), 0),
     professionals: attendees.filter(a => a.role === 'professional').length,
     students: attendees.filter(a => a.role === 'student').length,
@@ -130,6 +134,38 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('[Simposio] Error:', err)
       alert('Error al actualizar el registro')
+    }
+  }
+
+  const handleToggleCheckIn = async (attendee: Attendee) => {
+    const nextCheckedIn = !attendee.checked_in
+    // Actualización optimista para que la UI responda al instante
+    setAttendees(prev => prev.map(a =>
+      a.id === attendee.id
+        ? { ...a, checked_in: nextCheckedIn, checked_in_at: nextCheckedIn ? new Date().toISOString() : null }
+        : a
+    ))
+    try {
+      const result = await toggleCheckIn(attendee.id, nextCheckedIn)
+      if (!result.success) {
+        // Revertir si falla
+        setAttendees(prev => prev.map(a =>
+          a.id === attendee.id
+            ? { ...a, checked_in: attendee.checked_in ?? false, checked_in_at: attendee.checked_in_at ?? null }
+            : a
+        ))
+        alert('Error al actualizar el ingreso: ' + result.error)
+      } else {
+        console.log('[Simposio] Check-in updated:', attendee.id, nextCheckedIn)
+      }
+    } catch (err) {
+      setAttendees(prev => prev.map(a =>
+        a.id === attendee.id
+          ? { ...a, checked_in: attendee.checked_in ?? false, checked_in_at: attendee.checked_in_at ?? null }
+          : a
+      ))
+      console.error('[Simposio] Check-in error:', err)
+      alert('Error al actualizar el ingreso')
     }
   }
 
@@ -329,7 +365,25 @@ export default function AdminDashboard() {
         </div>
 
         {/* Financial Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-5 bg-card border-2 border-emerald-200">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Ingresaron al evento</p>
+                <p className="font-serif text-2xl font-bold text-emerald-600">
+                  {stats.checkedIn}
+                  <span className="text-base font-medium text-muted-foreground"> / {stats.total}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0}% de los registrados
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <DoorOpen className="w-5 h-5 text-emerald-600" />
+              </div>
+            </div>
+          </Card>
+
           <Card className="p-5 bg-card border border-border">
             <div className="flex items-start justify-between">
               <div>
@@ -392,6 +446,8 @@ export default function AdminDashboard() {
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   {filteredAttendees.length} de {attendees.length} registros
+                  {' · '}
+                  <span className="text-emerald-600 font-medium">{stats.checkedIn} ingresaron</span>
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 sm:mt-0">
@@ -486,6 +542,9 @@ export default function AdminDashboard() {
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Estado
                   </th>
+                  <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Ingreso
+                  </th>
                   <th className="px-4 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                     Fecha
                   </th>
@@ -496,10 +555,10 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredAttendees.map(attendee => (
-                  <tr key={attendee.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={attendee.id} className={`transition-colors ${attendee.checked_in ? 'bg-emerald-50/60 hover:bg-emerald-50' : 'hover:bg-muted/30'}`}>
                     <td className="px-4 md:px-6 py-4">
                       <div>
-                        <p className="font-medium text-foreground">{attendee.full_name}</p>
+                        <p className={`font-medium ${attendee.checked_in ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{attendee.full_name}</p>
                         <p className="text-sm text-muted-foreground">DNI: {attendee.dni}</p>
                       </div>
                     </td>
@@ -538,6 +597,22 @@ export default function AdminDashboard() {
                           }`} />
                         {attendee.status === 'paid' ? 'Pagado' : 'Pendiente'}
                       </span>
+                    </td>
+                    <td className="px-4 md:px-6 py-4">
+                      <button
+                        onClick={() => handleToggleCheckIn(attendee)}
+                        className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full transition-colors ${attendee.checked_in
+                          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                          }`}
+                        title={attendee.checked_in ? 'Deshacer ingreso (no entró)' : 'Marcar ingreso al evento'}
+                      >
+                        {attendee.checked_in ? (
+                          <><UserCheck className="w-3.5 h-3.5" /> Ingresó</>
+                        ) : (
+                          <><LogIn className="w-3.5 h-3.5" /> Marcar</>
+                        )}
+                      </button>
                     </td>
                     <td className="px-4 md:px-6 py-4 hidden lg:table-cell">
                       <span className="text-sm text-muted-foreground">

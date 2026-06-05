@@ -275,6 +275,42 @@ export async function markAsPaid(attendeeId: string): Promise<RegisterResult> {
 }
 
 /**
+ * Marcar / desmarcar el ingreso al evento (check-in) — acción de admin
+ */
+export async function toggleCheckIn(
+  attendeeId: string,
+  checkedIn: boolean
+): Promise<RegisterResult> {
+  try {
+    const { data, error } = await supabase
+      .from('attendees')
+      .update({
+        checked_in: checkedIn,
+        checked_in_at: checkedIn ? new Date().toISOString() : null,
+      })
+      .eq('id', attendeeId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[Simposio] Check-in update error:', error)
+      return {
+        success: false,
+        error: 'Error al actualizar el ingreso',
+      }
+    }
+
+    return { success: true, data: data as Attendee }
+  } catch (error) {
+    console.error('[Simposio] Check-in error:', error)
+    return {
+      success: false,
+      error: 'Error interno del servidor',
+    }
+  }
+}
+
+/**
  * Delete attendee (admin action)
  */
 export async function deleteAttendee(attendeeId: string): Promise<{
