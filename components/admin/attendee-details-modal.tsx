@@ -30,6 +30,78 @@ const getCurrentPrice = () => {
   return new Date() < EARLY_BIRD_DEADLINE ? EARLY_BIRD_PRICE : REGULAR_PRICE
 }
 
+// Escapa texto para insertarlo seguro en el HTML del comprobante
+const esc = (s: unknown) =>
+  String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
+
+// Genera el HTML autocontenido del comprobante (para imprimir / guardar como PDF)
+function buildReceiptHtml(a: Attendee, amount: number): string {
+  const roleLabel = a.role === 'professional' ? 'Profesional Veterinario' : 'Estudiante'
+  const statusLabel = a.status === 'paid' ? 'PAGADO' : 'PENDIENTE'
+  const statusColor = a.status === 'paid' ? '#16a34a' : '#d97706'
+  const fmt = (d?: string | null) =>
+    d ? new Date(d).toLocaleString('es-PE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:8px 0;color:#64748b;font-size:13px;">${label}</td><td style="padding:8px 0;color:#0f172a;font-size:13px;font-weight:600;text-align:right;">${value}</td></tr>`
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Comprobante - ${esc(a.full_name)}</title>
+<style>
+  @media print { @page { margin: 16mm; } }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#0f172a;margin:0;padding:24px;background:#fff;}
+  .card{max-width:640px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;}
+  .head{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:28px 24px;}
+  .head h1{margin:0;font-size:20px;}
+  .head p{margin:4px 0 0;font-size:13px;color:rgba(255,255,255,.9);}
+  .body{padding:24px;}
+  table{width:100%;border-collapse:collapse;}
+  .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;background:${statusColor};}
+  .code{margin-top:20px;border:2px dashed #cbd5e1;border-radius:8px;padding:16px;text-align:center;}
+  .code small{display:block;color:#64748b;font-size:11px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
+  .code b{font-family:'Courier New',monospace;font-size:15px;color:#1e40af;word-break:break-all;letter-spacing:1px;}
+  .amount{margin-top:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;}
+  .amount span{color:#166534;font-size:13px;}
+  .amount b{color:#15803d;font-size:24px;}
+  .foot{padding:16px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center;}
+</style></head>
+<body>
+  <div class="card">
+    <div class="head">
+      <h1>Comprobante de Registro</h1>
+      <p>II Simposio Veterinario Internacional 2026 · Círculo de Estudios Claude Bourgelat</p>
+    </div>
+    <div class="body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;">
+        <h2 style="margin:0;font-size:18px;">${esc(a.full_name)}</h2>
+        <span class="badge">${statusLabel}</span>
+      </div>
+      <table>
+        ${row('DNI', esc(a.dni))}
+        ${row('Correo', esc(a.email))}
+        ${row('Teléfono', esc(a.phone))}
+        ${row('Categoría', roleLabel)}
+        ${a.organization ? row('Institución', esc(a.organization)) : ''}
+        ${a.is_scholarship ? row('Beca', 'Sí') : ''}
+        ${row('Fecha de registro', fmt(a.created_at))}
+        ${a.checked_in ? row('Ingreso al evento', fmt(a.checked_in_at)) : ''}
+      </table>
+      <div class="amount">
+        <span>${a.status === 'paid' ? 'Monto pagado' : 'Monto a pagar'}</span>
+        <b>S/ ${amount.toFixed(2)}</b>
+      </div>
+      <div class="code">
+        <small>Código de Ticket</small>
+        <b>${esc(a.ticket_code)}</b>
+      </div>
+      <p style="margin-top:20px;font-size:13px;color:#475569;">
+        Presenta este comprobante junto con tu DNI el día del evento (05 y 06 de Junio, 2026).
+        Hotel Costa del Sol — Av. Los Cocoteros 505, El Golf, Trujillo.
+      </p>
+    </div>
+    <div class="foot">© ${new Date().getFullYear()} Círculo de Estudios Claude Bourgelat · circulodeestudiosclaudebourgela@gmail.com</div>
+  </div>
+</body></html>`
+}
+
 interface AttendeeDetailsModalProps {
   attendee: Attendee
   isOpen: boolean
@@ -44,6 +116,40 @@ export default function AttendeeDetailsModal({
   if (!isOpen) return null
 
   const ticketPrice = getCurrentPrice()
+  // Monto real que pagó/debe esta persona (respeta precio personalizado / beca)
+  const paidAmount = attendee.custom_price ?? ticketPrice
+
+  const handleDownloadReceipt = () => {
+    const html = buildReceiptHtml(attendee, paidAmount)
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+    const doc = iframe.contentWindow?.document
+    if (!doc) {
+      document.body.removeChild(iframe)
+      return
+    }
+    doc.open()
+    doc.write(html)
+    doc.close()
+    const cleanup = () => {
+      if (iframe.parentNode) iframe.parentNode.removeChild(iframe)
+    }
+    const win = iframe.contentWindow
+    if (win) win.onafterprint = cleanup
+    // Pequeña espera para que el iframe renderice antes de imprimir
+    setTimeout(() => {
+      win?.focus()
+      win?.print()
+      // Respaldo por si onafterprint no dispara
+      setTimeout(cleanup, 60000)
+    }, 250)
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-PE', {
@@ -177,8 +283,13 @@ export default function AttendeeDetailsModal({
                   <div className="bg-green-50 p-4 rounded-xl border border-green-100">
                     <p className="text-xs text-green-700/70 mb-1">Monto Pagado</p>
                     <p className="font-serif text-2xl font-bold text-green-700">
-                      S/ {ticketPrice.toFixed(2)}
+                      S/ {paidAmount.toFixed(2)}
                     </p>
+                    {attendee.is_scholarship && (
+                      <p className="text-xs text-green-700/70 mt-1">
+                        Beca · precio base S/ {ticketPrice.toFixed(2)}
+                      </p>
+                    )}
                   </div>
                   {attendee.payment_order_id && (
                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
@@ -230,7 +341,7 @@ export default function AttendeeDetailsModal({
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => {/* Download receipt logic */}}
+                onClick={handleDownloadReceipt}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Descargar Recibo
