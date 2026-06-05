@@ -59,7 +59,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@simposio.pe"
+                placeholder="correo@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
@@ -96,12 +96,6 @@ export default function LoginPage() {
               {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-xs text-foreground/60 text-center">
-              <strong>Demo:</strong> admin@simposio.pe / admin123
-            </p>
-          </div>
         </Card>
       </div>
     </div>
