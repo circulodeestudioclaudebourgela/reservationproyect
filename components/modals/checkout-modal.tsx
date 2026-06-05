@@ -28,6 +28,7 @@ import {
 import type { RegistrationForm } from '@/lib/validations'
 import { registerAttendee } from '@/app/actions/register'
 import { processYapePayment, processCardPayment } from '@/app/actions/payment'
+import { toast } from 'sonner'
 
 // Declarar tipos para MP SDK global
 declare global {
@@ -339,21 +340,21 @@ export default function CheckoutModal({ formData, onClose }: CheckoutModalProps)
   const handleClose = () => {
     // Prevenir cierre durante procesamiento de pago
     if (step === 'processing') {
-      alert('⚠️ Espera a que termine el procesamiento del pago. No cierres esta ventana.')
+      toast.warning('Espera a que termine el procesamiento del pago. No cierres esta ventana.')
       return
     }
-    
-    // Confirmar si hay un pago en progreso
-    if (step === 'yape-form' && (yapePhone || yapeOtp)) {
-      const confirm = window.confirm('¿Seguro que deseas cancelar? Perderás los datos ingresados.')
-      if (!confirm) return
+
+    // Confirmar si hay datos de pago en progreso (no cerrar de golpe)
+    const hasUnsavedData = (step === 'yape-form' && (yapePhone || yapeOtp)) || step === 'card-form'
+    if (hasUnsavedData) {
+      toast('¿Cancelar el pago?', {
+        description: 'Perderás los datos ingresados.',
+        action: { label: 'Sí, cancelar', onClick: () => onClose() },
+        cancel: { label: 'Seguir', onClick: () => {} },
+      })
+      return
     }
-    
-    if (step === 'card-form') {
-      const confirm = window.confirm('¿Seguro que deseas cancelar? Perderás los datos ingresados.')
-      if (!confirm) return
-    }
-    
+
     onClose()
   }
 

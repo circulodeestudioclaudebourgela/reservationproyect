@@ -34,6 +34,7 @@ import ManualRegistrationModal from './manual-registration-modal'
 import type { Attendee } from '@/lib/supabase'
 import { exportToCSV, exportToExcel } from '@/lib/export'
 import { getAllAttendees, markAsPaid, deleteAttendee, toggleCheckIn } from '@/app/actions/register'
+import { toast } from 'sonner'
 
 // Precios dinámicos
 const EARLY_BIRD_PRICE = 250.00
@@ -127,13 +128,13 @@ export default function AdminDashboard() {
             ? { ...a, status: 'paid' as const, payment_order_id: `manual_${Date.now()}`, payment_method: 'manual' as const }
             : a
         ))
-        console.log('[Simposio] Attendee marked as paid:', attendee.id)
+        toast.success(`${attendee.full_name} marcado como pagado`)
       } else {
-        alert('Error al marcar como pagado: ' + result.error)
+        toast.error('Error al marcar como pagado: ' + result.error)
       }
     } catch (err) {
       console.error('[Simposio] Error:', err)
-      alert('Error al actualizar el registro')
+      toast.error('Error al actualizar el registro')
     }
   }
 
@@ -154,9 +155,9 @@ export default function AdminDashboard() {
             ? { ...a, checked_in: attendee.checked_in ?? false, checked_in_at: attendee.checked_in_at ?? null }
             : a
         ))
-        alert('Error al actualizar el ingreso: ' + result.error)
+        toast.error('Error al actualizar el ingreso: ' + result.error)
       } else {
-        console.log('[Simposio] Check-in updated:', attendee.id, nextCheckedIn)
+        toast.success(nextCheckedIn ? `${attendee.full_name} marcado como ingresado` : `Ingreso de ${attendee.full_name} deshecho`)
       }
     } catch (err) {
       setAttendees(prev => prev.map(a =>
@@ -165,25 +166,31 @@ export default function AdminDashboard() {
           : a
       ))
       console.error('[Simposio] Check-in error:', err)
-      alert('Error al actualizar el ingreso')
+      toast.error('Error al actualizar el ingreso')
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.')) {
-      try {
-        const result = await deleteAttendee(id)
-        if (result.success) {
-          setAttendees(prev => prev.filter(a => a.id !== id))
-          console.log('[Simposio] Attendee deleted:', id)
-        } else {
-          alert('Error al eliminar: ' + result.error)
-        }
-      } catch (err) {
-        console.error('[Simposio] Delete error:', err)
-        alert('Error al eliminar el registro')
+  const performDelete = async (attendee: Attendee) => {
+    try {
+      const result = await deleteAttendee(attendee.id)
+      if (result.success) {
+        setAttendees(prev => prev.filter(a => a.id !== attendee.id))
+        toast.success(`${attendee.full_name} eliminado`)
+      } else {
+        toast.error('Error al eliminar: ' + result.error)
       }
+    } catch (err) {
+      console.error('[Simposio] Delete error:', err)
+      toast.error('Error al eliminar el registro')
     }
+  }
+
+  const handleDelete = (attendee: Attendee) => {
+    toast(`¿Eliminar a ${attendee.full_name}?`, {
+      description: 'Esta acción no se puede deshacer.',
+      action: { label: 'Eliminar', onClick: () => performDelete(attendee) },
+      cancel: { label: 'Cancelar', onClick: () => {} },
+    })
   }
 
   const handleRefresh = async () => {
@@ -198,10 +205,10 @@ export default function AdminDashboard() {
     try {
       const dataToExport = searchTerm ? filteredAttendees : attendees
       exportToCSV(dataToExport, 'participantes_simposio')
-      console.log('[Simposio] Exported to CSV:', dataToExport.length, 'records')
+      toast.success(`${dataToExport.length} registros exportados a CSV`)
     } catch (error) {
       console.error('[Simposio] CSV export error:', error)
-      alert('Error al exportar a CSV')
+      toast.error('Error al exportar a CSV')
     } finally {
       setIsExporting(false)
       setShowExportMenu(false)
@@ -216,10 +223,10 @@ export default function AdminDashboard() {
       if (!result.success) {
         throw new Error(result.error)
       }
-      console.log('[Simposio] Exported to Excel:', dataToExport.length, 'records')
+      toast.success(`${dataToExport.length} registros exportados a Excel`)
     } catch (error) {
       console.error('[Simposio] Excel export error:', error)
-      alert('Error al exportar a Excel. Asegúrate de tener xlsx instalado (pnpm add xlsx)')
+      toast.error('Error al exportar a Excel. Asegúrate de tener xlsx instalado (pnpm add xlsx)')
     } finally {
       setIsExporting(false)
       setShowExportMenu(false)
@@ -638,7 +645,7 @@ export default function AdminDashboard() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(attendee.id)}
+                          onClick={() => handleDelete(attendee)}
                           className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                           title="Eliminar"
                         >

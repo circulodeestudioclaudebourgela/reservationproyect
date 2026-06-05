@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -35,7 +37,7 @@ const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
 
 // Genera el HTML autocontenido del comprobante (para imprimir / guardar como PDF)
-function buildReceiptHtml(a: Attendee, amount: number): string {
+function buildReceiptHtml(a: Attendee, amount: number, qrDataUrl: string): string {
   const roleLabel = a.role === 'professional' ? 'Profesional Veterinario' : 'Estudiante'
   const statusLabel = a.status === 'paid' ? 'PAGADO' : 'PENDIENTE'
   const statusColor = a.status === 'paid' ? '#16a34a' : '#d97706'
@@ -91,6 +93,7 @@ function buildReceiptHtml(a: Attendee, amount: number): string {
       <div class="code">
         <small>Código de Ticket</small>
         <b>${esc(a.ticket_code)}</b>
+        ${qrDataUrl ? `<div style="margin-top:14px;"><img src="${qrDataUrl}" alt="Código QR" width="150" height="150" style="display:block;margin:0 auto;"/></div>` : ''}
       </div>
       <p style="margin-top:20px;font-size:13px;color:#475569;">
         Presenta este comprobante junto con tu DNI el día del evento (05 y 06 de Junio, 2026).
@@ -113,6 +116,17 @@ export default function AttendeeDetailsModal({
   isOpen,
   onClose,
 }: AttendeeDetailsModalProps) {
+  const [qrDataUrl, setQrDataUrl] = useState('')
+
+  // Genera un QR escaneable real con el código de ticket
+  useEffect(() => {
+    let active = true
+    QRCode.toDataURL(attendee.ticket_code, { width: 240, margin: 1 })
+      .then((url) => { if (active) setQrDataUrl(url) })
+      .catch(() => { if (active) setQrDataUrl('') })
+    return () => { active = false }
+  }, [attendee.ticket_code])
+
   if (!isOpen) return null
 
   const ticketPrice = getCurrentPrice()
@@ -120,7 +134,7 @@ export default function AttendeeDetailsModal({
   const paidAmount = attendee.custom_price ?? ticketPrice
 
   const handleDownloadReceipt = () => {
-    const html = buildReceiptHtml(attendee, paidAmount)
+    const html = buildReceiptHtml(attendee, paidAmount, qrDataUrl)
     const iframe = document.createElement('iframe')
     iframe.style.position = 'fixed'
     iframe.style.right = '0'
@@ -324,10 +338,21 @@ export default function AttendeeDetailsModal({
                   {attendee.ticket_code}
                 </p>
                 
-                {/* QR Code placeholder */}
+                {/* QR Code real (codifica el ticket_code) */}
                 <div className="mt-4 bg-white p-4 rounded-lg flex items-center justify-center border">
                   <div className="text-center">
-                    <QrCode className="w-24 h-24 text-primary mx-auto mb-2" />
+                    {qrDataUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={qrDataUrl}
+                        alt="Código QR del ticket"
+                        className="w-40 h-40 mx-auto mb-2"
+                      />
+                    ) : (
+                      <div className="w-40 h-40 mx-auto mb-2 flex items-center justify-center">
+                        <QrCode className="w-24 h-24 text-muted-foreground/40 animate-pulse" />
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Código QR para check-in
                     </p>

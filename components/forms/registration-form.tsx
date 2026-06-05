@@ -86,9 +86,7 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   const onSubmit = async (data: RegistrationFormType) => {
     setIsSubmitting(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('[Simposio] Registration data:', data)
+      // El registro real (BD + pago) ocurre en el checkout; aquí solo avanzamos de paso
       onSuccess(data)
     } catch (error) {
       console.error('[Simposio] Registration error:', error)

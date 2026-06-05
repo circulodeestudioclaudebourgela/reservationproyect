@@ -180,24 +180,3 @@ export async function exportToExcel(attendees: Attendee[], filename = 'participa
     }
   }
 }
-
-/**
- * Estadísticas de los asistentes
- */
-export function getAttendeesStats(attendees: Attendee[]) {
-  const total = attendees.length
-  const paid = attendees.filter(a => a.status === 'paid').length
-  const pending = total - paid
-  const professionals = attendees.filter(a => a.role === 'professional').length
-  const students = total - professionals
-  
-  return {
-    total,
-    paid,
-    pending,
-    professionals,
-    students,
-    revenue: paid * 150.00,
-    expectedRevenue: total * 150.00,
-  }
-}

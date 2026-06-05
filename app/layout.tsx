@@ -4,6 +4,7 @@ import { Playfair_Display, Inter } from 'next/font/google'
 import Script from 'next/script'
 
 import './globals.css'
+import { Toaster } from '@/components/ui/sonner'
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://v0-veterinary-symposium-registratio.vercel.app'
 const siteName = 'II Simposio Veterinario Internacional 2026'
@@ -114,7 +115,10 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   )
 }
