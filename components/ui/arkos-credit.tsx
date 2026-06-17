@@ -7,8 +7,8 @@ export function ArkosCredit() {
       <span>Diseñado y desarrollado por</span>
       <Link 
         href="https://xn--rkos-4na.com" 
-        target="_blank" 
-        rel="noopener noreferrer"
+        target="_blank"
+        rel="noopener"
         title="Árkos - Agencia de Desarrollo Web y Diseño UX/UI"
         className="font-medium hover:text-secondary transition-colors flex items-center gap-1"
       >

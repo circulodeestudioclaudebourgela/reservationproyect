@@ -35,9 +35,14 @@ const eventStructuredData = {
     name: 'Círculo de Estudios Claude Bourgelat',
     url: siteUrl,
   },
+  creator: {
+    '@type': 'Organization',
+    name: 'Árkos',
+    url: 'https://xn--rkos-4na.com',
+  },
 }
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ['latin'], 
   variable: '--font-playfair',
   display: 'swap',
