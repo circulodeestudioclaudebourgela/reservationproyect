@@ -325,7 +325,7 @@ export default function RegistrationForm({ onSuccess }: RegistrationFormProps) {
                     onValueChange={(value) => setValue('role', value as 'student' | 'professional')}
                     disabled={isSubmitting}
                   >
-                    <SelectTrigger className="bg-background border-border h-12">
+                    <SelectTrigger id="role" className="bg-background border-border h-12">
                       <SelectValue placeholder="Selecciona tu rol" />
                     </SelectTrigger>
                     <SelectContent>

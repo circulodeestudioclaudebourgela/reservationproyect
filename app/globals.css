@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-playfair: var(--font-playfair, 'Playfair Display', serif);
-  --font-inter: var(--font-inter, 'Inter', sans-serif);
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -121,4 +116,25 @@
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.public-site) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Parte pública: teal y gris de texto algo más oscuros para llegar a contraste AA
+   sobre fondos claros (el admin conserva los tokens base). */
+.public-site {
+  --secondary: 174 72% 27%;
+  --accent: 174 72% 27%;
+  --ring: 174 72% 27%;
+  --muted-foreground: 215 18% 39%;
 }

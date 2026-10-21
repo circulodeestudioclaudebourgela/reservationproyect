@@ -1,123 +1,27 @@
-'use client'
-
-import { Card } from '@/components/ui/card'
-import { 
-  BookOpen, 
-  Microscope, 
-  Users, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  Mail,
-  GraduationCap,
-  Lightbulb,
-  Award,
-  Star,
-  Quote,
-  Car,
-  Wifi,
-  Wind,
-  Coffee
-} from 'lucide-react'
-
-const features = [
-  {
-    icon: BookOpen,
-    title: 'Ponencias Magistrales',
-    description: 'Conferencias impartidas por expertos nacionales e internacionales en diversas especialidades veterinarias.'
-  },
-  {
-    icon: Microscope,
-    title: 'Talleres Especializados',
-    description: 'Sesiones prácticas con equipos de última generación para un aprendizaje aplicado y directo.'
-  },
-  {
-    icon: Users,
-    title: 'Networking Profesional',
-    description: 'Conecta con colegas, investigadores y profesionales del sector veterinario de todo el país.'
-  },
-  {
-    icon: Award,
-    title: 'Certificación',
-    description: 'Obtén certificados de participación avalados por instituciones académicas reconocidas.'
-  }
-]
-
-const agendaDay1 = [
-  { time: '08:30 - 09:00', title: 'Apertura del evento', type: 'ceremonia' },
-  { time: '09:00 - 09:45', title: 'FLUTD complejo y casos refractarios — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
-  { time: '09:45 - 10:30', title: 'Actualización en el manejo anestésico: Transición integral del modelo convencional al sistema balanceado y monitoreado — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
-  { time: '10:50 - 11:35', title: 'Monitorización gasométrica en el paciente crítico — Dr. Sebastian Velez', type: 'ponencia' },
-  { time: '11:35 - 12:20', title: 'Ultrasonografía aplicada a la Ginecología y Obstetricia Veterinaria — Dr. Liev Tamariz', type: 'ponencia' },
-  { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
-  { time: '14:30 - 15:15', title: 'Biomarcadores y mecanismos fisiopatológicos del daño renal agudo en felinos domésticos — Dra. Camila Sánchez-Carrión', type: 'ponencia' },
-  { time: '15:15 - 16:00', title: 'Hipotermia perioperatoria: mecanismos, prevención y consecuencias — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
-  { time: '16:20 - 17:05', title: 'Tips and Tricks de Cirugía Abdominal — Dr. Maykel Povea', type: 'ponencia' },
-  { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
-  { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
-  { time: '18:10 - 18:55', title: 'Manejo Quirúrgico de las Anomalías de Anillo Vascular en pequeños animales: Enfoques y Estrategias Avanzadas — Dr. Maykel Povea', type: 'ponencia' },
-]
-
-const agendaDay2 = [
-  { time: '09:00 - 09:45', title: 'Valoración de la vía aérea previo a la inducción — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '09:45 - 10:30', title: 'Introducción a la interpretación de electrolitos y desórdenes ácido-base — Dr. Sebastian Velez', type: 'ponencia' },
-  { time: '10:30 - 10:50', title: 'Receso', type: 'break' },
-  { time: '10:50 - 11:35', title: 'Criterios terapéuticos para la selección de derivados sanguíneos — Dr. Sebastian Velez', type: 'ponencia' },
-  { time: '11:35 - 12:20', title: 'Endoscopia Digestiva: Del Diagnóstico a la Terapéutica — Dr. Luis Lam', type: 'ponencia' },
-  { time: '12:20 - 14:30', title: 'Almuerzo', type: 'break' },
-  { time: '14:30 - 15:15', title: 'Estrategias multimodales frente al paradigma de los opioides: Análisis crítico de la anestesia libre de opioides (OFA) en veterinaria — MV. Alexander Sánchez', type: 'ponencia' },
-  { time: '15:15 - 16:00', title: 'Avances recientes en Colecistectomía Laparoscópica (Estado del Arte) — Dr. Maykel Povea', type: 'ponencia' },
-  { time: '16:00 - 16:20', title: 'Receso', type: 'break' },
-  { time: '16:20 - 17:05', title: 'Temas avanzados en Cirugía Oncológica: Resolución Quirúrgica de Casos Clínicos Complejos — Dr. Maykel Povea', type: 'ponencia' },
-  { time: '17:05 - 17:50', title: 'Charla comercial', type: 'panel' },
-  { time: '17:50 - 18:10', title: 'Receso', type: 'break' },
-  { time: '18:10 - 18:55', title: 'Clausura', type: 'ceremonia' },
-]
-
-const workshopsPre = [
-  { time: 'Por confirmar', title: 'Ecografía Gestacional — Dr. Liev Tamariz', type: 'taller' },
-  { time: 'Por confirmar', title: 'Endoscopia Veterinaria — Dr. Luis Lam', type: 'taller' },
-]
-
-const workshopsPost = [
-  { time: 'Por confirmar', title: 'Tips and Tricks en Cirugía Veterinaria — Dr. Maykel Povea', type: 'taller' },
-  { time: 'Por confirmar', title: 'Anestesia Veterinaria — MV. Alexander Sánchez', type: 'taller' },
-  { time: 'Por confirmar', title: 'Ecografía Veterinaria A-FAST — Dr. Liev Tamariz', type: 'taller' },
-]
-
-const getTypeStyles = (type: string) => {
-  switch (type) {
-    case 'ponencia':
-      return 'bg-primary/10 text-primary border-l-primary'
-    case 'taller':
-      return 'bg-secondary/10 text-secondary border-l-secondary'
-    case 'panel':
-      return 'bg-purple-100 text-purple-700 border-l-purple-500'
-    case 'ceremonia':
-      return 'bg-amber-100 text-amber-700 border-l-amber-500'
-    case 'break':
-      return 'bg-muted text-muted-foreground border-l-muted-foreground/30'
-    default:
-      return 'bg-muted text-muted-foreground border-l-muted-foreground/30'
-  }
-}
+import { Download, ExternalLink, MapPin, CalendarDays, Quote } from 'lucide-react'
+import SectionHeader from '@/components/sections/section-header'
+import {
+  conferenceDays,
+  workshopDays,
+  speakers,
+  programStats,
+  splitTitle,
+  type ProgramDay,
+  type ProgramItem,
+} from '@/lib/program'
 
 const testimonials = [
   {
-    name: 'M.V JAVIER MOULY',
-    role: 'ESPECIALISTA EN MEDICINA CRITICA Y CUIDADOS INTENSIVOS DE PEQUEÑOS ANIMALES',
+    name: 'M.V. Javier Mouly',
+    role: 'Especialista en medicina crítica y cuidados intensivos de pequeños animales',
     image: '/OPINION%20DE%20PROFESIONALES/MV%20JAVIER%20MOULY/mouly.jpg',
-    quote: 'Un excelente experiencia, con un feed back increíble. Se ve el esfuerzo y las ganas de aprender.',
-    rating: 5,
+    quote: 'Una excelente experiencia, con un feedback increíble. Se ve el esfuerzo y las ganas de aprender.',
   },
   {
-    name: 'M.V JOSÉ VILLENA',
-    role: 'ESPECIALISTA EN DIAGNÓSTICO POR IMÁGENES',
+    name: 'M.V. José Villena',
+    role: 'Especialista en diagnóstico por imágenes',
     image: '/OPINION%20DE%20PROFESIONALES/MV%20JOSE%20VILLENA/villena.jpg',
     quote: 'Evento que propone actualización; que nunca antes fue realizado por estudiantes de medicina veterinaria de la ciudad de Trujillo, y no por la Universidad, con resultados muy favorables, con algoritmos claros y precisos en cada especialista y cada charla.',
-    rating: 5,
   },
 ]
 
@@ -137,468 +41,358 @@ const sponsors = [
   { name: 'Sagrop', logo: '/LOGOS%20MARCAS/sagrop-removebg-preview.png' },
 ]
 
-export default function InfoSections() {
+const container = 'mx-auto max-w-6xl px-4 sm:px-6 lg:px-8'
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+// Bloque de fecha (día + mes) para encabezar cada jornada
+function DateBadge({ day, month, tone = 'primary' }: { day: string; month: string; tone?: 'primary' | 'secondary' }) {
   return (
-    <div className="space-y-0">
-      {/* Sponsors Marquee - Full Width Mist Transition */}
-      <section className="w-full bg-background pt-10 pb-12 border-b border-border/40">
-        <div className="container mx-auto px-4 mb-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground/70">
+    <div
+      className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl leading-none text-white ${
+        tone === 'primary' ? 'bg-primary' : 'bg-secondary'
+      }`}
+      aria-hidden="true"
+    >
+      <span className="text-xl font-bold tabular-nums">{day}</span>
+      <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider">{month}</span>
+    </div>
+  )
+}
+
+function ProgramRow({ item }: { item: ProgramItem }) {
+  const time = item.time?.replace(' - ', '–')
+
+  if (item.type === 'break' || item.type === 'panel') {
+    return (
+      <li className="grid gap-1 border-t border-dashed border-border py-3 sm:grid-cols-[7rem_1fr] sm:gap-4">
+        <span className="text-sm tabular-nums text-muted-foreground">{time}</span>
+        <span className="text-sm text-muted-foreground">{item.title}</span>
+      </li>
+    )
+  }
+
+  const { title, speaker } = splitTitle(item.title)
+  return (
+    <li className={`grid gap-1 border-t border-border py-4 ${time ? 'sm:grid-cols-[7rem_1fr] sm:gap-4' : ''}`}>
+      {time && <span className="text-sm font-medium tabular-nums text-muted-foreground">{time}</span>}
+      <div>
+        <p className={`leading-snug text-foreground ${item.type === 'ceremonia' ? 'font-semibold' : 'font-medium'}`}>{title}</p>
+        {speaker && <p className="mt-1 text-sm font-medium text-secondary">{speaker}</p>}
+      </div>
+    </li>
+  )
+}
+
+function DayCard({ day, title, subtitle, tone }: { day: ProgramDay; title: string; subtitle: string; tone?: 'primary' | 'secondary' }) {
+  return (
+    <article className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7">
+      <header className="mb-2 flex items-center gap-4">
+        <DateBadge day={day.day} month={day.month} tone={tone} />
+        <div>
+          <h3 className="font-serif text-2xl font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      </header>
+      <ol>
+        {day.items.map((item, idx) => (
+          <ProgramRow key={idx} item={item} />
+        ))}
+      </ol>
+    </article>
+  )
+}
+
+export default function InfoSections({ registrationOpen }: { registrationOpen: boolean }) {
+  const past = !registrationOpen
+
+  const highlights = [
+    {
+      title: 'Ponencias magistrales',
+      text: `${programStats.talks} ponencias de especialistas nacionales e internacionales en dos días de conferencias.`,
+    },
+    {
+      title: 'Talleres prácticos',
+      text: past
+        ? 'Sesiones prácticas pre y post congreso, el 4 y el 7 de junio.'
+        : 'Sesiones prácticas pre y post congreso, el 4 y el 7 de junio, con inscripción aparte.',
+    },
+    {
+      title: 'Encuentro profesional',
+      text: past
+        ? 'Un espacio para conectar con colegas, investigadores y profesionales del sector veterinario de todo el país.'
+        : 'Conecta con colegas, investigadores y profesionales del sector veterinario de todo el país.',
+    },
+    {
+      title: 'Certificación',
+      text: past
+        ? 'Los asistentes recibieron certificado de participación.'
+        : 'La inscripción incluye certificado de participación.',
+    },
+  ]
+
+  return (
+    <div>
+      {/* Auspiciadores */}
+      <section className="border-b border-border/60 bg-background py-10 sm:py-12">
+        <div className={`${container} mb-8`}>
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Con el respaldo de
           </p>
         </div>
         <div className="relative overflow-hidden">
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-r from-background to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-48 bg-gradient-to-l from-background to-transparent z-10" />
-          
-          <div className="animate-marquee flex items-center gap-12 md:gap-16 whitespace-nowrap w-max">
+          <div className="absolute bottom-0 left-0 top-0 z-10 w-16 bg-gradient-to-r from-background to-transparent md:w-40" />
+          <div className="absolute bottom-0 right-0 top-0 z-10 w-16 bg-gradient-to-l from-background to-transparent md:w-40" />
+
+          <ul className="animate-marquee flex w-max items-center gap-12 whitespace-nowrap md:gap-16">
             {/* Duplicate array for seamless loop */}
             {[...sponsors, ...sponsors].map((sponsor, i) => (
-              <div
+              <li
                 key={`${sponsor.name}-${i}`}
-                className="flex items-center justify-center w-28 md:w-36 h-16 md:h-20 shrink-0"
+                className="flex h-16 w-28 shrink-0 items-center justify-center md:h-20 md:w-36"
+                aria-hidden={i >= sponsors.length || undefined}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={sponsor.logo}
                   alt={sponsor.name}
-                  className="w-full h-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100"
+                  loading="lazy"
+                  className="h-full w-full object-contain opacity-70 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0"
                 />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Sobre el simposio */}
+      <section className="bg-background py-20 md:py-28">
+        <div className={`${container} grid gap-12 lg:grid-cols-12 lg:gap-16`}>
+          <SectionHeader
+            className="lg:col-span-5"
+            eyebrow="Sobre el simposio"
+            title={past ? 'Dos días de actualización clínica en Trujillo' : '¿Por qué asistir?'}
+            lead={
+              past
+                ? 'El II Simposio Veterinario Internacional reunió a especialistas nacionales e internacionales en cirugía, anestesia, cuidados críticos, ultrasonografía, endoscopia y medicina felina para animales de compañía.'
+                : 'El II Simposio Veterinario Internacional reúne a especialistas nacionales e internacionales en cirugía, anestesia, cuidados críticos, ultrasonografía, endoscopia y medicina felina para animales de compañía.'
+            }
+          />
+          <dl className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:col-span-7 lg:pt-8">
+            {highlights.map((h, i) => (
+              <div key={h.title} className="border-t-2 border-secondary/30 pt-5">
+                <dt className="flex items-baseline gap-3">
+                  <span className="text-sm font-semibold tabular-nums text-secondary">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="font-serif text-xl font-semibold text-foreground">{h.title}</span>
+                </dt>
+                <dd className="mt-2 leading-relaxed text-muted-foreground">{h.text}</dd>
               </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* Programa */}
+      <section id="agenda" className="scroll-mt-4 bg-muted/50 py-20 md:py-28">
+        <div className={container}>
+          <SectionHeader
+            className="mb-12 md:mb-14"
+            eyebrow="Programa académico"
+            title={past ? 'Así fue el programa' : 'Agenda del evento'}
+            lead={`Dos días de conferencias, el 5 y 6 de junio de 2026, con ${programStats.talks} ponencias, y talleres pre y post congreso el 4 y 7 de junio.`}
+          />
+
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+            {conferenceDays.map((day, i) => (
+              <DayCard
+                key={day.id}
+                day={day}
+                title={day.label}
+                subtitle={`${day.weekday} ${Number(day.day)} de junio`}
+                tone={i === 0 ? 'primary' : 'secondary'}
+              />
+            ))}
+          </div>
+
+          <h3 className="mb-6 mt-16 font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+            Talleres pre y post congreso
+          </h3>
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+            {workshopDays.map((day) => (
+              <DayCard
+                key={day.id}
+                day={day}
+                title={day.label}
+                subtitle={`${day.weekday} ${Number(day.day)} de junio`}
+                tone="secondary"
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
-                Sobre el Evento
-              </span>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-                ¿Por qué asistir?
-              </h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                El II Simposio Veterinario Internacional reúne a los mejores profesionales 
-                del sector para compartir conocimientos en cirugía abdominal, ultrasonografía diagnóstica, 
-                técnicas mínimamente invasivas y las últimas evidencias en investigación clínica para animales de compañía.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {features.map((feature, idx) => (
-                <Card 
-                  key={idx} 
-                  className="p-6 border border-border bg-card hover:shadow-xl hover:shadow-secondary/5 transition-all duration-300 hover:-translate-y-1 group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mb-5 group-hover:bg-secondary/20 transition-colors">
-                    <feature.icon className="w-7 h-7 text-secondary" />
-                  </div>
-                  <h3 className="font-serif text-xl font-semibold text-foreground mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Schedule Section */}
-      <section id="agenda" className="py-20 md:py-28 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
-                Programa Académico
-              </span>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-                Agenda del Evento
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Dos días de conferencias (05 y 06 de Junio) con talleres pre y post congreso el 4 y 7 de Junio.
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Day 1 */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary-foreground">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground">Día 1</h3>
-                    <p className="text-muted-foreground text-sm">Viernes, 05 de Junio</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {agendaDay1.map((item, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
-                    >
-                      <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
-                      <p className="font-medium">{item.title}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Day 2 */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                    <span className="text-xl font-bold text-white">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-2xl font-bold text-foreground">Día 2</h3>
-                    <p className="text-muted-foreground text-sm">Sábado, 06 de Junio</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {agendaDay2.map((item, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
-                    >
-                      <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
-                      <p className="font-medium">{item.title}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-20">
-              <div className="text-center mb-12">
-                <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
-                  Talleres Especializados
-                </span>
-                <h3 className="font-serif text-3xl font-bold text-foreground">
-                  Pre y Post Congreso
-                </h3>
-              </div>
-              <div className="grid lg:grid-cols-2 gap-8">
-                {/* Talleres Pre */}
-                <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">Pr</span>
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-2xl font-bold text-foreground">Taller Pre-Congreso</h3>
-                      <p className="text-muted-foreground text-sm">Martes, 04 de Junio</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {workshopsPre.map((item, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
-                      >
-                        <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
-                        <p className="font-medium">{item.title}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Talleres Post */}
-                <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">Po</span>
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-2xl font-bold text-foreground">Talleres Post-Congreso</h3>
-                      <p className="text-muted-foreground text-sm">Domingo, 07 de Junio</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {workshopsPost.map((item, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-4 rounded-lg border-l-4 ${getTypeStyles(item.type)}`}
-                      >
-                        <p className="text-xs font-semibold mb-1 opacity-80">{item.time}</p>
-                        <p className="font-medium">{item.title}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-primary" />
-                <span className="text-muted-foreground">Ponencias</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-secondary" />
-                <span className="text-muted-foreground">Talleres</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-purple-500" />
-                <span className="text-muted-foreground">Paneles</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-amber-500" />
-                <span className="text-muted-foreground">Ceremonias</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials & Trust Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            {/* Section header */}
-            <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
-                Primera Edición 2025
-              </span>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-                Lo que dijeron nuestros asistentes
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Más de 200 profesionales veterinarios participaron en nuestra primera edición
-              </p>
-            </div>
-
-            {/* Testimonials grid */}
-            <div className="grid md:grid-cols-2 gap-6 mb-16 max-w-4xl mx-auto">
-              {testimonials.map((t, idx) => (
-                <Card key={idx} className="p-6 border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
-                  <Quote className="w-8 h-8 text-secondary/20 absolute top-4 right-4" />
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-secondary/30 to-primary/30 shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={t.image}
-                        alt={t.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-0.5 mb-3">
-                    {[...Array(t.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground italic leading-relaxed">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-                </Card>
-              ))}
-            </div>
-
-            {/* Stats bar */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                { value: '98%', label: 'Satisfacción General' },
-                { value: '200+', label: 'Asistentes 2025' },
-                { value: '15', label: 'Especialidades Cubiertas' },
-                { value: '4.9/5', label: 'Calificación Promedio' },
-              ].map(({ value, label }) => (
-                <div key={label} className="text-center p-6 rounded-xl bg-muted/50 border border-border">
-                  <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">{value}</div>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Flyer Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-medium rounded-full mb-4">
-                Programa Oficial
-              </span>
-              <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
-                El evento que no puedes perderte
-              </h2>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
-              {/* Flyer image */}
-              <div className="md:w-1/2 flex justify-center">
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/5 rounded-3xl blur-2xl" />
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10" style={{ transform: 'rotate(-1deg)' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/flyer.jpeg"
-                      alt="Flyer oficial II Simposio Veterinario Internacional 2026"
-                      className="w-full max-w-[320px] md:max-w-[380px] block"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Info lateral */}
-              <div className="md:w-1/2 space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
-                    <span className="text-2xl">📅</span>
-                    <div>
-                      <p className="font-semibold text-foreground">Fechas del evento</p>
-                      <p className="text-muted-foreground text-sm">4 de Junio: Taller Pre-Congreso</p>
-                      <p className="text-muted-foreground text-sm">5 y 6 de Junio: Conferencias</p>
-                      <p className="text-muted-foreground text-sm">7 de Junio: Talleres Post-Congreso</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
-                    <span className="text-2xl">📍</span>
-                    <div>
-                      <p className="font-semibold text-foreground">Sede</p>
-                      <p className="text-muted-foreground text-sm">Hotel Costa del Sol</p>
-                      <p className="text-muted-foreground text-sm">Av. Los Cocoteros 505, Urb. El Golf</p>
-                      <p className="text-muted-foreground text-sm">Trujillo, Perú</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
-                    <span className="text-2xl">📞</span>
-                    <div>
-                      <p className="font-semibold text-foreground">Informes e inscripciones</p>
-                      <p className="text-muted-foreground text-sm">+51 920 211 630</p>
-                      <p className="text-muted-foreground text-sm">+51 940 668 619</p>
-                    </div>
-                  </div>
-                </div>
+      {/* Ponentes + afiche */}
+      <section id="ponentes" className="scroll-mt-4 bg-background py-20 md:py-28">
+        <div className={`${container} grid gap-12 lg:grid-cols-12 lg:gap-16`}>
+          <div className="lg:col-span-5 lg:self-start lg:[@media(min-height:800px)]:sticky lg:[@media(min-height:800px)]:top-8">
+            <SectionHeader
+              eyebrow="Ponentes"
+              title={past ? 'Quienes compartieron su experiencia' : 'Quiénes nos acompañan'}
+              lead="Especialistas a cargo de las ponencias y talleres del programa."
+            />
+            <figure className="mx-auto mt-10 max-w-sm lg:mx-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/flyer.jpeg"
+                alt="Afiche oficial del II Simposio Veterinario Internacional 2026 con los ponentes"
+                width={1455}
+                height={1600}
+                loading="lazy"
+                className="w-full rounded-2xl shadow-xl ring-1 ring-black/5"
+              />
+              <figcaption className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                <span>Afiche oficial de la edición 2026</span>
                 <a
                   href="/flyer.jpeg"
                   download="flyer-simposio-veterinario-2026.jpg"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-secondary hover:bg-secondary/90 text-white font-semibold rounded-xl shadow-lg shadow-secondary/20 transition-all hover:-translate-y-0.5 hover:shadow-xl text-sm"
+                  className="inline-flex items-center gap-1.5 rounded-md font-semibold text-secondary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  Descargar flyer
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  Descargar afiche
                 </a>
-              </div>
-            </div>
+              </figcaption>
+            </figure>
+          </div>
+
+          <ul className="divide-y divide-border border-y border-border lg:col-span-7 lg:self-start">
+            {speakers.map((s) => (
+              <li key={s.name} className="py-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="font-serif text-xl font-semibold text-foreground sm:text-2xl">{s.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {[
+                      s.talks.length ? plural(s.talks.length, 'ponencia', 'ponencias') : null,
+                      s.workshops.length ? plural(s.workshops.length, 'taller', 'talleres') : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+                <ul className="mt-3 space-y-1.5 text-[15px] leading-snug text-muted-foreground">
+                  {s.talks.map((t) => (
+                    <li key={t} className="flex gap-2">
+                      <span className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-secondary" aria-hidden="true" />
+                      {t}
+                    </li>
+                  ))}
+                  {s.workshops.map((w) => (
+                    <li key={w} className="flex gap-2">
+                      <span className="mt-[0.55em] h-1 w-1 shrink-0 rounded-full bg-secondary" aria-hidden="true" />
+                      <span>
+                        Taller: {w}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Testimonios (primera edición) */}
+      <section className="bg-muted/50 py-20 md:py-28">
+        <div className={container}>
+          <SectionHeader
+            className="mb-12 md:mb-14"
+            eyebrow="Primera edición · 2025"
+            title="Lo que dijeron de la primera edición"
+            lead="Más de 200 profesionales veterinarios participaron en nuestra primera edición."
+          />
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {testimonials.map((t) => (
+              <figure key={t.name} className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+                <Quote className="h-8 w-8 text-secondary/40" aria-hidden="true" />
+                <blockquote className="mt-4 flex-1 text-lg leading-relaxed text-foreground">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="mt-6 flex items-center gap-4 border-t border-border pt-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={t.image}
+                    alt=""
+                    width={48}
+                    height={48}
+                    loading="lazy"
+                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold text-foreground">{t.name}</p>
+                    <p className="text-sm text-muted-foreground">{t.role}</p>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Location Section */}
-      <section className="py-20 md:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-4">
-                Sede del Evento
-              </span>
-              <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground">
-                Ubicación
-              </h2>
-            </div>
+      {/* Sede */}
+      <section id="sede" className="scroll-mt-4 bg-background py-20 md:py-28">
+        <div className={container}>
+          <SectionHeader className="mb-12 md:mb-14" eyebrow="Sede" title="Hotel Costa del Sol, Trujillo" />
 
-            <Card className="overflow-hidden border border-border bg-card">
-              <div className="grid lg:grid-cols-2">
-                {/* Info */}
-                <div className="p-8 md:p-12">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full mb-6">
-                    <MapPin className="w-4 h-4" />
-                    Trujillo, Perú
-                  </div>
-                  
-                  <h3 className="font-serif text-3xl font-bold text-foreground mb-2">
-                    Hotel Costa del Sol
-                  </h3>
-                  <p className="text-xl text-secondary font-medium mb-6">
-                    Urb. El Golf — Trujillo, Perú
+          <div className="grid overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-5">
+            <div className="space-y-8 p-6 sm:p-10 lg:col-span-2">
+              <div className="flex items-start gap-4">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold text-foreground">Dirección</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Av. Los Cocoteros 505, Urb. El Golf
+                    <br />
+                    Trujillo, La Libertad
                   </p>
-                  
-                  <div className="space-y-4 mb-8">
-                    <p className="text-muted-foreground leading-relaxed">
-                      Ubicado en el corazón de Trujillo, el Hotel Costa del Sol ofrece 
-                      instalaciones de primer nivel para eventos académicos y profesionales.
-                    </p>
-                    
-                    <div className="space-y-3 text-sm">
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
-                        <div>
-                          <p className="font-medium text-foreground">Dirección</p>
-                          <p className="text-muted-foreground">
-                            Av. Los Cocoteros 505, Urb. El Golf<br />
-                            Trujillo, La Libertad
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Phone className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
-                        <div>
-                          <p className="font-medium text-foreground">Informes e Inscripciones</p>
-                          <p className="text-muted-foreground">+51 920 211 630</p>
-                          <p className="text-muted-foreground">+51 940 668 619</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Mail className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
-                        <div>
-                          <p className="font-medium text-foreground">Email</p>
-                          <p className="text-muted-foreground">circulodeestudiosclaudebourgela@gmail.com</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
-                      <Car className="w-3 h-3" />
-                      Estacionamiento gratuito
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
-                      <Wifi className="w-3 h-3" />
-                      WiFi de alta velocidad
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
-                      <Wind className="w-3 h-3" />
-                      Aire acondicionado
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
-                      <Coffee className="w-3 h-3" />
-                      Cafetería
-                    </span>
-                  </div>
-                </div>
-
-                {/* Google Maps Embed */}
-                <div className="bg-muted min-h-[400px] lg:min-h-full relative overflow-hidden">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d987.3984199101368!2d-79.0402410738877!3d-8.14278009887682!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91ad3d8186ba493f%3A0x6c360c4d677a2f8!2sHotel%20%7C%20Wyndham%20Costa%20del%20Sol%20Trujillo!5e0!3m2!1ses!2spe!4v1771388722252!5m2!1ses!2spe"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, minHeight: '400px' }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="absolute inset-0"
-                    title="Ubicación Hotel Costa del Sol - El Golf, Trujillo"
-                  />
                 </div>
               </div>
-            </Card>
+              <div className="flex items-start gap-4">
+                <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold text-foreground">Fechas</p>
+                  <ul className="mt-1 space-y-1 text-muted-foreground">
+                    <li>4 de junio · Talleres pre-congreso</li>
+                    <li>5 y 6 de junio · Conferencias</li>
+                    <li>7 de junio · Talleres post-congreso</li>
+                  </ul>
+                </div>
+              </div>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Hotel+Costa+del+Sol+Trujillo+Los+Cocoteros+505"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md text-sm font-semibold text-secondary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Abrir en Google Maps
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+
+            {/* Google Maps Embed */}
+            <div className="relative min-h-[320px] bg-muted sm:min-h-[400px] lg:col-span-3">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d987.3984199101368!2d-79.0402410738877!3d-8.14278009887682!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91ad3d8186ba493f%3A0x6c360c4d677a2f8!2sHotel%20%7C%20Wyndham%20Costa%20del%20Sol%20Trujillo!5e0!3m2!1ses!2spe!4v1771388722252!5m2!1ses!2spe"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="absolute inset-0 h-full w-full"
+                title="Ubicación Hotel Costa del Sol - El Golf, Trujillo"
+              />
+            </div>
           </div>
         </div>
       </section>
